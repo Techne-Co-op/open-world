@@ -109,6 +109,48 @@ footer {
 footer a { color: var(--muted); }
 .hidden { display: none; }
 section { margin-bottom: var(--s6); }
+
+/* Proposed, not built. The estate's convention: dashed borders, hollow marks,
+   and a legend that says what the marks mean. Nothing in here reads a record. */
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: 500 9.5px/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px;
+  background: var(--surface); color: var(--muted); vertical-align: middle;
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
+.chip.proposed { color: var(--ember-text); border-color: var(--ember); border-style: dashed; }
+.chip.proposed .dot { background: transparent; border: 2px solid var(--ember); }
+.chip.example { color: var(--muted); border-style: dashed; }
+.chip.example .dot { background: transparent; border: 1px dashed var(--muted); }
+
+.card.proposed { border-style: dashed; background: none; }
+.stamps .rule-line { color: var(--muted); font-size: 13px; border-left: 2px solid var(--ember); padding-left: var(--s3); margin-bottom: var(--s4); }
+
+.book { display: flex; flex-wrap: wrap; gap: var(--s2); margin: var(--s3) 0 var(--s2); }
+.book .stamp {
+  width: 44px; height: 52px; border: 1px dashed var(--rule); border-radius: 2px;
+  background: none; display: flex; align-items: center; justify-content: center;
+}
+.book .stamp::after {
+  content: ''; width: 9px; height: 9px; border-radius: 50%;
+  border: 1px dashed var(--faint); background: none;
+}
+.stamps .classline {
+  display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap;
+  padding: var(--s3) 0; border-bottom: 1px dashed var(--line);
+}
+.stamps .classline:last-child { border-bottom: 0; }
+.stamps .classline .cid { font-size: 12.5px; color: var(--heading); flex: 1 1 auto; }
+.stamps .classline .cid .name { color: var(--muted); }
+.stamps .classline .units { font-size: 12px; color: var(--muted); font-style: italic; flex: none; margin-left: auto; }
+.stamps .classline .sub { flex-basis: 100%; font-size: 11px; color: var(--faint); margin-top: 2px; }
+.stamps .classline .sub .carrier { letter-spacing: .07em; text-transform: uppercase; }
+.stamps .vars { font-size: 11px; color: var(--faint); }
+.legend {
+  font: 400 10px/1.8 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--faint); display: flex; gap: var(--s5); flex-wrap: wrap; margin-top: var(--s4);
+}
 </style>
 </head>
 <body>
@@ -149,6 +191,35 @@ section { margin-bottom: var(--s6); }
       <div class="card"><div class="k">Membership</div><div class="v" id="membership">&mdash;</div></div>
       <div class="card"><div class="k">Roles</div><div class="v" id="roles">&mdash;</div></div>
     </section>
+
+    <!-- Stamps. Member surface only. Renders entirely from a typed placeholder in
+         the script below: it reads no record, because there is no record to read.
+         Every mark in here is dashed or hollow on purpose. -->
+    <section class="stamps" style="margin-top: var(--s6)">
+      <h2 style="font-size:18px">Stamps <span class="chip proposed"><span class="dot"></span>proposed</span></h2>
+      <p class="dim">A stamp is a prepaid service credit. You would buy or be granted a block of them, and the cooperative would meter what it carries for you against a published rate card, the way a post office franks a letter. The meter prices carriage and never content: a stamp does not know what your letter says.</p>
+      <p class="rule-line">Your stamp standing is computed from your own acts and is never comparative.</p>
+      <p class="dim">None of this exists. No stamp has been issued, nothing is for sale, and no price has been set. The schema this section would read is drafted across four migrations and none of them are applied. What they wait on is not code: whether the cooperative hosts members' mail at all, whether the board grants the one carve-out that lets a member see a number about themselves, and whether counsel reads Colorado's gift-card escheat statute as blocking the sale of a credit. Those are the humans' to answer. The working record is techne.coop issue <a href="https://github.com/Techne-Co-op/techne.coop/issues/196">#196</a> and the migration stop card that sits in front of 0031 through 0034.</p>
+
+      <div class="card proposed">
+        <div class="k">Your stamp book <span class="chip example"><span class="dot"></span>example</span></div>
+        <div class="book" id="stamp-book" aria-hidden="true"></div>
+        <div id="stamp-standing" style="margin-bottom: var(--s3)"></div>
+        <p class="vars" style="margin:0">Example shape only. Every cell is hollow because no unit has been issued to anyone. When this is real, it would fold your own <code>credit.purchased</code>, <code>credit.granted</code> and <code>credit.consumed</code> events into a standing per class. There is no stored balance anywhere and there never will be: the standing is the fold, and no query takes a person and returns a number.</p>
+      </div>
+
+      <div class="card proposed">
+        <div class="k">Rate card <span class="chip proposed"><span class="dot"></span>unpriced</span></div>
+        <div id="rate-card"></div>
+        <p class="vars" style="margin: var(--s3) 0 0">No coefficient is filled in, and that is deliberate rather than unfinished. A rate travels in the payload of an instrument the board adopts, never in code, and every figure published so far is a placeholder. The first honest audit of what delivery actually costs is the founding act, not a number typed here.</p>
+      </div>
+
+      <div class="legend">
+        <span>dashed &middot; proposed, not built</span>
+        <span>hollow &middot; no record exists</span>
+        <span>example &middot; shape only, not your data</span>
+      </div>
+    </section>
   </section>
 </main>
 
@@ -166,6 +237,95 @@ const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 let sb = null;
 const $ = id => document.getElementById(id);
+
+/* The stamps placeholder. This is the whole data source for the Stamps section:
+   a literal, shipped in the shell, read by nobody and written by nobody.
+
+   The shape mirrors what post_my_credit_standing() would return if migration
+   0034 were ever applied: rows of (class, units). `units` is null in every row
+   and must stay null. A number here would be a lie that looks live. */
+const STAMPS = {
+  status: 'proposed',
+  bookCells: 12,
+  standing: [
+    { class: 'mail.carriage', units: null },
+    { class: 'unclassed', units: null }
+  ],
+  rateCard: {
+    instrument: 'RATE-CARD',
+    version: '0.1',
+    adopted_at: null,
+    classes: [
+      { id: 'mail.carriage', name: 'a mailbox at techne.coop', delivered_by: 'supplier',
+        variables: ['messages_in', 'messages_out', 'storage_gb_months'], meters_during_halt: true },
+      { id: 'mail.alias', name: 'aliases and forwarding', delivered_by: 'supplier',
+        variables: ['messages_forwarded'], meters_during_halt: true },
+      { id: 'domain.hosting', name: "a venture's custom domain", delivered_by: 'cooperative',
+        variables: ['bandwidth_gb', 'storage_gb_months'], meters_during_halt: false },
+      { id: 'outbound.transactional', name: 'metered outbound at volume', delivered_by: 'supplier',
+        variables: ['messages_out'], meters_during_halt: false },
+      { id: 'sms.rail', name: 'the SMS rail', delivered_by: 'supplier',
+        variables: ['segments_in', 'segments_out'], meters_during_halt: true }
+    ]
+  }
+};
+
+function renderStamps() {
+  const book = $('stamp-book');
+  if (book && !book.childElementCount) {
+    for (let i = 0; i < STAMPS.bookCells; i++) {
+      const s = document.createElement('span');
+      s.className = 'stamp';
+      book.appendChild(s);
+    }
+  }
+  const st = $('stamp-standing');
+  if (st && !st.childElementCount) {
+    for (const row of STAMPS.standing) {
+      const d = document.createElement('div');
+      d.className = 'classline';
+      const cid = document.createElement('span');
+      cid.className = 'cid';
+      cid.textContent = row.class;
+      const units = document.createElement('span');
+      units.className = 'units';
+      // units is null in every placeholder row and must stay null.
+      units.textContent = row.units === null ? 'no units issued' : String(row.units);
+      d.appendChild(cid); d.appendChild(units);
+      st.appendChild(d);
+    }
+  }
+  const rc = $('rate-card');
+  if (!rc || rc.childElementCount) return;
+  for (const c of STAMPS.rateCard.classes) {
+    const row = document.createElement('div');
+    row.className = 'classline';
+    const cid = document.createElement('span');
+    cid.className = 'cid';
+    cid.textContent = c.id + '   ';
+    const nm = document.createElement('span');
+    nm.className = 'name';
+    nm.textContent = c.name;
+    cid.appendChild(nm);
+    const units = document.createElement('span');
+    units.className = 'units';
+    units.textContent = 'not priced';
+    row.appendChild(cid); row.appendChild(units);
+
+    const sub = document.createElement('div');
+    sub.className = 'sub';
+    const carrier = document.createElement('span');
+    carrier.className = 'carrier';
+    carrier.textContent = c.delivered_by === 'supplier' ? 'carried by supplier' : 'delivered by the cooperative';
+    sub.appendChild(carrier);
+    sub.appendChild(document.createTextNode(
+      ' · metered on ' + c.variables.join(', ')
+      + (c.meters_during_halt ? ' · keeps metering during a halt' : '')
+    ));
+    row.appendChild(sub);
+    rc.appendChild(row);
+  }
+}
 
 document.getElementById('mode-toggle').addEventListener('click', () => {
   const cur = document.documentElement.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
@@ -197,6 +357,7 @@ async function renderMember(session) {
   $('member').classList.remove('hidden');
   $('signout').classList.remove('hidden');
   $('who').textContent = session.user.email || session.user.id;
+  renderStamps(); // static placeholder; no session is passed because none is needed
   try {
     const agents = await api(`agents?auth_user_id=eq.${session.user.id}&select=id,display_name,kind`, session);
     if (!agents.length) { $('membership').textContent = 'no agent record'; return; }

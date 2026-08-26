@@ -16,6 +16,16 @@ The classification underneath is the **Project Triad**: a *project* is the open 
 - **The authority map governs.** What any persona may see or do is `visible(agent, record) = f(role, record class, governing §)` per [techne.coop/commons/authority-map](https://techne.coop/commons/authority-map/). A capability this app wants that the map does not ground is a stop card, not a feature.
 - **PWA first, possibly PWA only** (issue [#253](https://github.com/Techne-Co-op/techne.coop/issues/253)): one codebase, installable, no store presence. The app caches its shell and never the record — the halt has to win over offline.
 
+## The stamps surface
+
+The member view carries a **Stamps** section: a prepaid service credit, metered against a published rate card the way a post office franks a letter. It shows a stamp book, a rate card of five service classes, and the plain-language account of what the instrument is.
+
+**Its honesty rule: the section reads nothing and shows no number.** The credit schema does not exist in the CIS. Four migrations are drafted and none are applied, because what they wait on is not code but three human answers (whether the cooperative hosts members' mail at all, whether the board grants the carve-out that lets a member see a number about themselves, and whether counsel reads Colorado's gift-card escheat statute as blocking the sale of a credit). So the whole section renders from one literal object in the shell, every unit is null, every rate is unpriced, and the marks are dashed and hollow per the estate's proposed-not-built convention, with a legend saying so. The one place an example appears it is labelled *example* in the interface itself, not in a tooltip.
+
+Two design positions are carried from the credit work and are not this repository's to re-open: a standing is a **fold over events with no stored balance anywhere**, and a member sees **only their own** standing, never a comparison. The trust rule is printed on the surface: *your stamp standing is computed from your own acts and is never comparative.*
+
+Working record: techne.coop issue [#196](https://github.com/Techne-Co-op/techne.coop/issues/196) and the stop card in front of migrations 0031 through 0034.
+
 ## Documents
 
 - [`docs/JOURNEYS_AND_STORIES.md`](docs/JOURNEYS_AND_STORIES.md) — critical member and steward journeys and stories
