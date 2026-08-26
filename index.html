@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="The Open World of Techne  --  federated bodies of work, held in common. Alpha.">
+<title>Open World &middot; Techne</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#0F0F12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F7F5F0" media="(prefers-color-scheme: light)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    try {
+      var m = localStorage.getItem('techne-mode');
+      if (!m) m = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-mode', m);
+    } catch(e) {}
+  })();
+</script>
+<style>
+/* Techne v4 tokens (shared with techne.coop) */
+:root {
+  --serif: 'Libre Baskerville', Georgia, serif;
+  --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+  --dur: .4s; --micro: .16s; --ease: cubic-bezier(.4,0,.2,1);
+}
+html[data-mode="dark"] {
+  --bg: #0F0F12; --inset: #08080A; --surface: #16161B; --raised: #232329;
+  --line: #2A2A30; --rule: #3A3A42;
+  --heading: #E8E4DF; --text: #CFCBC4; --muted: #8A857E; --faint: #5A554F;
+  --blue: #6A8AC4; --blue-text: #97B5E8;
+  --ember: #C4956A; --ember-text: #D4A57A;
+  --blue-dim: rgba(106, 138, 196, 0.14);
+  --ember-dim: rgba(196, 149, 106, 0.14);
+  --ok: #6A9A6A; --warn: #C46A6A;
+  color-scheme: dark;
+}
+html[data-mode="light"] {
+  --bg: #F7F5F0; --inset: #EBE7DF; --surface: #FCFBF8; --raised: #FEFDFB;
+  --line: #D8D3C8; --rule: #9A958A;
+  --heading: #1A1A1F; --text: #2E2C28; --muted: #646058; --faint: #A39E92;
+  --blue: #4A6FB0; --blue-text: #39588F;
+  --ember: #8A6A4A; --ember-text: #6F5436;
+  --blue-dim: rgba(74, 111, 176, 0.10);
+  --ember-dim: rgba(138, 106, 74, 0.10);
+  --ok: #4A7A4A; --warn: #A84F4C;
+  color-scheme: light;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--mono); font-size: 14px; line-height: 1.6;
+  display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+header {
+  display: flex; align-items: baseline; gap: var(--s3);
+  padding: var(--s4) var(--s5); border-bottom: 1px solid var(--line);
+}
+header h1 { font-family: var(--serif); font-size: 18px; color: var(--heading); font-weight: 400; }
+header .mark { font-size: 11px; color: var(--ember-text); letter-spacing: .08em; text-transform: uppercase; }
+header .spacer { flex: 1; }
+button.ghost {
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  font-family: var(--mono); font-size: 12px; padding: var(--s1) var(--s3);
+  cursor: pointer; border-radius: 3px; transition: color var(--micro), border-color var(--micro);
+}
+button.ghost:hover { color: var(--heading); border-color: var(--rule); }
+main { flex: 1; overflow-y: auto; padding: var(--s6) var(--s5); max-width: 720px; width: 100%; margin: 0 auto; }
+h2 { font-family: var(--serif); font-weight: 400; font-size: 22px; color: var(--heading); margin-bottom: var(--s4); }
+p.lede { color: var(--text); margin-bottom: var(--s4); }
+p.dim { color: var(--muted); font-size: 13px; margin-bottom: var(--s4); }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  padding: var(--s4) var(--s5); margin-bottom: var(--s3);
+}
+.card .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.card .v { color: var(--heading); font-size: 15px; }
+.card.body-of-work { display: flex; align-items: baseline; gap: var(--s3); }
+.card.body-of-work .name { font-family: var(--serif); font-size: 16px; color: var(--heading); flex: 1; }
+.card.body-of-work .kind { font-size: 11px; color: var(--ember-text); letter-spacing: .06em; text-transform: uppercase; }
+form.signin { display: flex; gap: var(--s2); margin: var(--s4) 0; flex-wrap: wrap; }
+input[type=email] {
+  flex: 1; min-width: 220px; background: var(--inset); border: 1px solid var(--line);
+  color: var(--text); font-family: var(--mono); font-size: 14px; padding: var(--s2) var(--s3); border-radius: 3px;
+}
+button.act {
+  background: var(--blue-dim); border: 1px solid var(--blue); color: var(--blue-text);
+  font-family: var(--mono); font-size: 13px; padding: var(--s2) var(--s4);
+  cursor: pointer; border-radius: 3px;
+}
+.status { font-size: 12px; color: var(--muted); min-height: 1.2em; margin-bottom: var(--s4); }
+.status.warn { color: var(--warn); }
+.status.ok { color: var(--ok); }
+footer {
+  border-top: 1px solid var(--line); padding: var(--s3) var(--s5);
+  font-size: 11px; color: var(--faint); display: flex; gap: var(--s4); flex-wrap: wrap;
+}
+footer a { color: var(--muted); }
+.hidden { display: none; }
+section { margin-bottom: var(--s6); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Open World</h1>
+  <span class="mark">Techne &middot; alpha</span>
+  <span class="spacer"></span>
+  <button class="ghost" id="mode-toggle" aria-label="Toggle light or dark">mode</button>
+  <button class="ghost hidden" id="signout">sign out</button>
+</header>
+
+<main>
+  <!-- Guest surface: published presentation only; no database read (AM: anon reads nothing) -->
+  <section id="guest">
+    <h2>Federated bodies of work, held in common</h2>
+    <p class="lede">Any participant in the community of practice can share their body of work as a project. Projects add to, and form, the net work: federated bodies of work with common peers of the cooperative &mdash; stewards, members, and guests.</p>
+    <p class="dim">A <em>project</em> is the open entry point. A <em>venture</em> is the same body of work read as an external relationship; a <em>program</em>, the same work read as an internal one. Any body of work can be all three at once. Stewards designate programs and ventures; any participant may share a project.</p>
+    <p class="dim">This is the alpha shell of the open-world application: a second door onto the cooperative's Common Information System. It invents no permission &mdash; what you can see here is exactly what the record already lets you see. Guests read this page; members sign in to read the record they are entitled to.</p>
+    <div class="card">
+      <div class="k">Sign in &middot; members and participants</div>
+      <form class="signin" id="signin-form">
+        <input type="email" id="email" placeholder="you@example.org" autocomplete="email" required>
+        <button class="act" type="submit">send magic link</button>
+      </form>
+      <div class="status" id="signin-status"></div>
+      <p class="dim" style="margin:0">Same identity as the <a href="https://techne.coop/intranet/">intranet</a>. No new account system.</p>
+    </div>
+  </section>
+
+  <!-- Member surface -->
+  <section id="member" class="hidden">
+    <h2>The net work</h2>
+    <p class="dim">Bodies of work the record holds today: designated programs of the cooperative. The projects rail &mdash; where any participant shares their own body of work &mdash; does not exist yet in the schema; until it does, this shelf shows only what stewards have designated.</p>
+    <div id="net-work"></div>
+    <section style="margin-top: var(--s6)">
+      <h2 style="font-size:18px">Your standing</h2>
+      <div class="card"><div class="k">Signed in as</div><div class="v" id="who">&mdash;</div></div>
+      <div class="card"><div class="k">Membership</div><div class="v" id="membership">&mdash;</div></div>
+      <div class="card"><div class="k">Roles</div><div class="v" id="roles">&mdash;</div></div>
+    </section>
+  </section>
+</main>
+
+<footer>
+  <span>alpha &middot; nothing here is adopted</span>
+  <span>the app caches its shell, never the record</span>
+  <a href="https://github.com/Techne-Co-op/open-world">source</a>
+  <a href="https://techne.coop/commons/authority-map/">authority map</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://ujujwgopdwirebgcpekc.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqdWp3Z29wZHdpcmViZ2NwZWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODc3ODIsImV4cCI6MjA5OTM2Mzc4Mn0.v6atltp9vbEj0RN2stSuDrzOdWVHB9GGR6rwPCwBNEk';
+
+let sb = null;
+const $ = id => document.getElementById(id);
+
+document.getElementById('mode-toggle').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-mode', cur);
+  try { localStorage.setItem('techne-mode', cur); } catch(e) {}
+});
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+function setStatus(msg, cls) {
+  const el = $('signin-status');
+  el.textContent = msg; el.className = 'status ' + (cls || '');
+}
+
+async function api(path, session, opts) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, Object.assign({
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    }
+  }, opts || {}));
+  if (!r.ok) throw new Error(`${path}: ${r.status}`);
+  return r.json();
+}
+
+async function renderMember(session) {
+  $('guest').classList.add('hidden');
+  $('member').classList.remove('hidden');
+  $('signout').classList.remove('hidden');
+  $('who').textContent = session.user.email || session.user.id;
+  try {
+    const agents = await api(`agents?auth_user_id=eq.${session.user.id}&select=id,display_name,kind`, session);
+    if (!agents.length) { $('membership').textContent = 'no agent record'; return; }
+    const self = agents[0];
+    if (self.display_name) $('who').textContent = `${self.display_name} (${session.user.email})`;
+    const [ms, rg] = await Promise.all([
+      api(`memberships?agent_id=eq.${self.id}&select=state`, session),
+      api(`role_grants?agent_id=eq.${self.id}&revoked_at=is.null&select=role`, session)
+    ]);
+    $('membership').textContent = ms.length ? ms.map(m => m.state).join(', ') : 'none on record';
+    $('roles').textContent = rg.length ? rg.map(r => r.role).join(', ') : 'none';
+  } catch (e) {
+    $('membership').textContent = 'could not read your record: ' + e.message;
+  }
+  try {
+    const progs = await api('rpc/programs_roster', session, { method: 'POST', body: '{}' });
+    const holder = $('net-work');
+    holder.innerHTML = '';
+    if (!Array.isArray(progs) || !progs.length) {
+      holder.innerHTML = '<div class="card"><div class="v">No designated bodies of work are visible to you yet.</div></div>';
+      return;
+    }
+    for (const p of progs) {
+      const d = document.createElement('div');
+      d.className = 'card body-of-work';
+      const name = document.createElement('span'); name.className = 'name';
+      name.textContent = p.name || p.program_name || p.display_name || JSON.stringify(p);
+      const kind = document.createElement('span'); kind.className = 'kind'; kind.textContent = 'program';
+      d.appendChild(name); d.appendChild(kind);
+      holder.appendChild(d);
+    }
+  } catch (e) {
+    $('net-work').innerHTML = `<div class="card"><div class="v">The net work could not be read: ${e.message}</div></div>`;
+  }
+}
+
+function renderGuest() {
+  $('guest').classList.remove('hidden');
+  $('member').classList.add('hidden');
+  $('signout').classList.add('hidden');
+}
+
+async function main() {
+  sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
+  $('signin-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    setStatus('sending…');
+    const { error } = await sb.auth.signInWithOtp({
+      email: $('email').value.trim(),
+      options: { emailRedirectTo: window.location.origin + '/' }
+    });
+    if (error) setStatus(error.message, 'warn');
+    else setStatus('Magic link sent. Check your email.', 'ok');
+  });
+  $('signout').addEventListener('click', async () => { await sb.auth.signOut(); renderGuest(); });
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) renderMember(session); else renderGuest();
+  sb.auth.onAuthStateChange((_ev, s) => { if (s) renderMember(s); else renderGuest(); });
+}
+
+if (window.supabase) main();
+else setStatus('Could not load the identity library. The shell works offline; the record needs the network.', 'warn');
+</script>
+</body>
+</html>
