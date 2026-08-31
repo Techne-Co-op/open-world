@@ -20,16 +20,24 @@ Everything below depends on documents this repository does not yet hold. The PRD
 | Artifact | Role per the PRD | In this repo |
 |---|---|---|
 | the prototype | reference implementation; **canonical for behavior** | **yes** — `prototypes/daybook-beta-v3.html` |
-| `DAYBOOK_BETA.md` | the specification | no |
+| `DAYBOOK_BETA.md` | the specification | **yes** — `docs/DAYBOOK_BETA.md` |
+| schema v0 | the event shape | **yes** — it is `DAYBOOK_BETA.md` §3, unchanged since v0 |
 | `READERS_INSTRUCTIONS.md` | agent governance for the machine-class reader | no |
-| schema v0 | the event shape | no |
-| *The Second Generation* | the method register | no |
+| *The Second Generation* | the method register | no (method-history, not behavior) |
 
 `DAYBOOK_PRD.md` (this repo, verbatim as delivered, sha256 `b3bef074…c1339`) is the first artifact. The second is the prototype, delivered 2026-08-31 (sha256 `48063b7e…c13af`).
 
 **Version note.** The PRD's header names `daybook-beta-v2.html` as the reference implementation. What was delivered is **v3**, described by the steward as updated from v2. The prototype is canonical for behavior, so where the two disagree the file wins and the PRD header is stale by one version. That is recorded, not corrected: the PRD is held verbatim as delivered.
 
 **What the prototype settles.** Read at the delivered file, it is a single self-contained page, 1,057 lines, no `fetch`, no `XMLHttpRequest`, no `localStorage`, no Supabase client — in-memory exactly as PRD §5 Out says. It carries the seven views as hash routes (`journal`, `people`, `threads`, `open`, `gather`, `words`, `share`), the A/D walk over them, the left rail tiered as §5 describes (daily / the readings / yours / a system foot), the Rereading room, the Method page, the raw-record inspector, a guest-view toggle, and the cord. Event kinds visible in the seed include `entry.written`, `inference.proposed`, `inference.confirmed`, and `question.owned`. So layers 2 through 4 now have a behavioral reference and are buildable; **only `DAYBOOK_BETA.md`, `READERS_INSTRUCTIONS.md` and schema v0 remain outstanding at this layer.**
+
+**What the specification settles.** `DAYBOOK_BETA.md` (beta v3, delivered 2026-08-31, sha256 `5f4c50c7…1a8ed`) carries the schema in §3 — so *schema v0 is not a missing artifact; it is that section, and the spec says it is unchanged since v0*. It gives five tables (`agents`, `events`, `edges`, `threads`, `terms`), a closed list of nineteen event kinds, an explicit **deliberately-not-tables** list, each of the seven readings written as a fold in §4, and a design system in §5 whose one load-bearing rule is semantic: **serif is the human voice, mono is the record's grammar.** Spot-checked against the prototype and consistent: `Libre Baskerville` and `IBM Plex Mono` both present, `prefers-reduced-motion` honored, `setPointerCapture` for drag-dismiss, a skeleton state, and an inline web-app manifest.
+
+**With this, layers 2 through 6 are specified.** The remaining layer-0 gap is `READERS_INSTRUCTIONS.md` alone, which governs the reader — so layer 5's live model call is still the only step lacking its governing document.
+
+**One correction to layer 1, from §7.** The spec is more specific than the PRD: the `agents` table takes a **class** column with the value `machine`, and *the reader is a row there, not an exception*. That is precise enough to name the ask exactly. It is a CIS schema addition and a new RLS policy — restricting one agent class to writing only the four inference kinds — and this repository changes no schema (AGENTS.md STOP). The stop card is therefore: **does the authority map ground a machine class of agent, and if not, what grounds it?** Filed against the estate, not decided here. Everything the spec claims about "the member has the last word" being a database constraint rather than a UI promise depends on that answer.
+
+**A seam worth naming.** §9 says a service worker with shell-only caching *is not yet present* in the prototype. This repository already ships one (`sw.js`, registered from `index.html`) under the rule that the shell may cache and the record never does. When the Daybook is wired into this app, the prototype's seam closes by adopting the app's existing service worker, not by writing a second one.
 
 **One flag under AGENTS.md MARK.** The prototype's seed data uses the first names of real members of the cooperative — Todd, Aaron, Kevin, Lucien, Jo — attached to invented entries, wagers, and disagreements. In an in-memory prototype that writes nowhere this is harmless, and it is illustrative in the way a walkthrough wants. It stops being harmless the moment this page is served anywhere a reader could mistake it for the record. Before layer 7, either the seed is relabelled on its face or the names are changed.
 
@@ -82,7 +90,9 @@ Guest routes are the same routes, map-evaluated for the guest role (§5). Depend
 
 ## Layer 8 · Share as a project
 
-The Triad offer from a thread, by reference, entries as provenance. **This beta stops at the authority-map stop card** (§5), and §8.4 — what "share as a project" may create in the CIS from this door — is unanswered. It is also the same projects rail that `docs/JOURNEYS_AND_STORIES.md` Journey 1 names as a rail that does not exist. One gap, two documents.
+The Triad offer from a thread, by reference, entries as provenance. **This beta stops at the authority-map stop card** (PRD §5), and PRD §8.4 — what "share as a project" may create in the CIS from this door — is unanswered. It is also the same projects rail that `docs/JOURNEYS_AND_STORIES.md` Journey 1 names as a rail that does not exist. One gap, two documents.
+
+The specification's §7 states the linkage more definitely than the PRD does — *threads are proto-projects*, shared **by reference, not by copy**, the CIS project record pointing at the thread and the thread's entries becoming its provenance, with venture and program remaining steward designations the Daybook only displays. It then carries its own warning in the same breath: pressure-test this against the STANDING constraint before treating it as settled. By-reference is the load-bearing half of that claim, because it is what keeps the append-only log the single source and the project record a pointer.
 
 ## What is not blocked on anything
 
