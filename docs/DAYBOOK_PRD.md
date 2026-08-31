@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Status | Draft v0 · unadopted · for the Wednesday room |
-| Reference implementation | `daybook-beta-v2.html` (single file; the prototype is canonical for behavior) |
+| Reference implementation | `daybook-beta-v3.html` (single file; the prototype is canonical for behavior) |
 | Companion documents | `DAYBOOK_BETA.md` (specification) · `READERS_INSTRUCTIONS.md` (agent governance) · schema v0 · *The Second Generation* register |
 | Grounded in | techne.coop `/commonplace` · `/daybook` · `open-world` · the authority map |
 | Author | Todd Youngblood, with machine assistance, labeled as such |

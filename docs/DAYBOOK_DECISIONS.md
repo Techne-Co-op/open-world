@@ -50,3 +50,19 @@ And PRD §2 decides what to do about it: *a capability the map does not ground i
 
 - **Where a staged inference lives.** Outside `events` is a boundary, not a location. Session-scoped in the client, a staging store outside the record classes, or something else is an open design question, and it is new — this decision created it. Added to the open ledger as item 12.
 - **Open ledger item 11, the record class of a correction, is untouched and gets harder.** Under scoped impersonation the reader reads only as the member it serves, so its curriculum can only ever be that member's own corrections. *Whose judgment trained it* is answerable one member at a time. That is a reads question; D-01 is a writes decision and does not reach it.
+
+---
+
+## D-02 · Three corrections, and the verbatim hold released for them
+
+**Taken by** Nou, 2026-08-31, under Todd Youngblood's instruction in `#open-world` to work through the remaining list. No judgment in any of the three; each is a factual correction to a delivered artifact.
+
+Until now every delivered artifact was held exactly as received, with findings recorded beside them rather than fixed in them. That hold is released for these three edits and no others. The originals remain recoverable by their recorded hashes: the prototype at `48063b7e…c13af`, the specification at `5f4c50c7…1a8ed`, the reader's instructions at `7c3ba8dd…c8813`, the schema companion at `4bc04fda…c7b55`.
+
+1. **`docs/DAYBOOK_PRD.md`** — reference implementation named `daybook-beta-v2.html`; the delivered and canonical file is `daybook-beta-v3.html`. Corrected.
+
+2. **`prototypes/daybook-beta-v3.html`** — the seed uses real members' first names against invented entries, wagers and a disagreement. A line now stands in the rail foot on every view: *Demonstration seed. Every entry, wager, question and disagreement below is invented for this prototype. The names are real members of the cooperative; none of the writing attributed to them is theirs.*
+
+   Labeled rather than renamed, deliberately. The risk was a reader mistaking invented entries for the record, and a label answers that directly while keeping the demonstration's texture — a room of people who actually know each other. If the names should go instead, that is a one-line change and a different decision.
+
+3. **`docs/DAYBOOK_BETA.md` §9** — the honest-seams paragraph said a service worker is not present. True of the prototype, not of the repository: `sw.js` is tracked at the root and caches the shell, never the record. The sentence now says which is which and that the build adopts the existing one rather than writing a second.
