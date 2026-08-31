@@ -93,7 +93,7 @@ Open ledger item 12 closes.
 
 **A, taken.** The specification §3 and the schema companion both promised that *whose judgment trained it* stays a query, not a mystery. Under scoped impersonation that is false as written: a member reads as themselves, so they can audit what trained the reader on their own writing and no one else's. Both sentences now say that, and both name the wider question as filed rather than answered. Edited under the hold released in D-02; the delivered hashes stand as the record of what arrived.
 
-**B, filed.** Whether corrections may be disclosed across members while the entries they concern stay private is a question for the authority map, not for this application. It has a real argument on both sides — AM v0.1 §2 says the default runs toward disclosure to members, and a correction's reasons are about the reader's behavior rather than the member's content; against that, a correction quotes the writing it corrects. It needs an anchor and a human. Filed against `techne.coop`, cross-referenced here.
+**B, filed.** Whether corrections may be disclosed across members while the entries they concern stay private is a question for the authority map, not for this application. It has a real argument on both sides — AM v0.1 §2 says the default runs toward disclosure to members, and a correction's reasons are about the reader's behavior rather than the member's content; against that, a correction quotes the writing it corrects. It needs an anchor and a human. Filed as `Techne-Co-op/techne.coop` issue #273.
 
 **C stands where it was.** The Rereading room already discloses the correction distribution at every close, which is aggregate disclosure and needs no decision.
 
