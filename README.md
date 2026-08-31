@@ -26,12 +26,24 @@ Two design positions are carried from the credit work and are not this repositor
 
 Working record: techne.coop issue [#196](https://github.com/Techne-Co-op/techne.coop/issues/196) and the stop card in front of migrations 0031 through 0034.
 
+## The Daybook
+
+The steward's stated near-term goal for this work is a **public beta of the Daybook**: one shared, append-only journal the cooperative writes into plainly and reads seven ways, where a machine-class reader proposes structure and a member always has the last word. Its PRD is [`docs/DAYBOOK_PRD.md`](docs/DAYBOOK_PRD.md), delivered by the steward on 2026-08-31 and held here verbatim (sha256 `b3bef074…c1339`).
+
+**It is Draft v0, unadopted, for the Wednesday room.** The PRD says so on its own face and this repository does not upgrade it. Plans against it are ordered by systems dependency and never by time estimate, per the steward's direction: [`docs/DAYBOOK_DEPENDENCY_ORDER.md`](docs/DAYBOOK_DEPENDENCY_ORDER.md).
+
+The PRD names four companion artifacts as governing behavior — the prototype `daybook-beta-v2.html` (canonical), `DAYBOOK_BETA.md`, `READERS_INSTRUCTIONS.md`, and schema v0. **None are in this repository yet**, so behavior is underspecified and building against the PRD alone would be invention. That is the first dependency, and it is the steward's to clear.
+
+Note also that `techne.coop/daybook/` already publishes a *book* of that name — the launch weekend, verbatim, binding nothing. The instrument in this PRD shares its name and lineage and is a different object; which of the two the app is a door onto is an open question in the dependency document.
+
 ## Documents
 
+- [`docs/DAYBOOK_PRD.md`](docs/DAYBOOK_PRD.md) — the Daybook public-beta PRD, as delivered by the steward
+- [`docs/DAYBOOK_DEPENDENCY_ORDER.md`](docs/DAYBOOK_DEPENDENCY_ORDER.md) — the Daybook build order, by systems dependency
 - [`docs/JOURNEYS_AND_STORIES.md`](docs/JOURNEYS_AND_STORIES.md) — critical member and steward journeys and stories
 - [`docs/STEWARD_PERSONA.md`](docs/STEWARD_PERSONA.md) — the steward persona and its permissions set, intersected with the authority map
 - [`CONTRIBUTORS.md`](CONTRIBUTORS.md) / [`AGENTS.md`](AGENTS.md) — how to work here
 
 ## Provenance
 
-Originating direction: Todd Youngblood (Ventures & Operations Steward), Buzz DM, 2026-08-26. Related record: techne.coop issues [#253](https://github.com/Techne-Co-op/techne.coop/issues/253) (the app articulation and PRD), [#217](https://github.com/Techne-Co-op/techne.coop/issues/217) (the two bodies), [#247](https://github.com/Techne-Co-op/techne.coop/issues/247) (the message bus), and the guild critical path filed on [#230](https://github.com/Techne-Co-op/techne.coop/issues/230).
+Originating direction: Todd Youngblood (Ventures & Operations Steward), Buzz DM, 2026-08-26. Artifact-driven build directed in Buzz #open-world, 2026-08-31: the steward supplies artifacts, the repository and its documents are updated against each, plans are set against the beta goal and ordered by systems dependency rather than by time. This is pre-adoption work, developed with other officers and members of the board. Related record: techne.coop issues [#253](https://github.com/Techne-Co-op/techne.coop/issues/253) (the app articulation and PRD), [#217](https://github.com/Techne-Co-op/techne.coop/issues/217) (the two bodies), [#247](https://github.com/Techne-Co-op/techne.coop/issues/247) (the message bus), and the guild critical path filed on [#230](https://github.com/Techne-Co-op/techne.coop/issues/230).
