@@ -124,3 +124,27 @@ Plus two this document adds, from reading the PRD against this repository's cons
 
 7. **Whether the authority map grounds a machine class at all**, and if not, where that stop card is filed.
 8. **Where the Daybook lives, and its relation to the book of the same name.** The PRD grounds itself in `/commonplace`, `/daybook`, and `open-world`. But `techne.coop/daybook/` is already published and is a *finished book* — the launch weekend, seven sittings, forty-two entries, verbatim, binding nothing. The instrument in this PRD is a *living, append-only journal for everyone*. They share a name and a lineage and they are not the same object. Whether the instrument is a surface of this PWA, a sibling app on the same CIS, or the living end of the estate's own shelf changes layers 2 and 7 materially, and it has not been answered. The PRD's own §9.5 gestures at it — *the Commonplace's living end* — without settling it.
+
+## Addendum · the schema companion, and what reading four documents together turns up
+
+`prototypes/daybook-schema-v1.html` (v1, aligned to beta v3) arrived after this document was written. It is a companion, not a new authority: it describes the five relations, the nineteen kinds, and the seven folds, and it says so in its own footer — *this document describes, the members adopt*. It changes no layer of the order above. Two things it does settle, and three it does not.
+
+**Settled.** Schema v0 was never missing: the specification's §3 is it, and this companion is v1 of the same reading. And `thread.forming` is not an event kind — the companion states plainly that a forming thread *is* an unconfirmed inference in `events`, dashed until named. That reading dissolves half the J3/J6 crossing recorded against `READERS_INSTRUCTIONS.md`.
+
+**Not settled, and now stated three incompatible ways.** Which kinds the machine class may write:
+
+- the specification §7 and the companion's detail pane both say **only inference kinds**, which reads as all three;
+- the companion's own grammar header says **only the dashed three**, while exactly one kind carries the dashed marker in its markup;
+- the companion's per-kind attributions say `inference.confirmed` and `inference.corrected` are written by **member** — which is what they mean, since a confirmation the machine writes is not a confirmation.
+
+The only reading that survives all four documents is that the machine writes exactly one kind, `inference.proposed`. That is not what any of the three sentences says. Since the whole *member has the last word* claim is to be enforced as row-level security keyed on this, the RLS predicate cannot be written until the sentence is.
+
+**Not settled: `disagreement.noted`.** J5 still stages a name that is in no kind list and is not an `inference.*` kind. The `thread.forming` rescue may extend to it — a disagreement reading staged as a proposal's payload — but no document says so, and J6 read literally still forbids it.
+
+**Not settled, and sharpened: who can query the correction log.** The companion holds two claims at once. *Your Share*: another member's share is **unqueryable, not merely unshown**, as RLS. *Deliberately not stored*: there are no training weights, because the reader's curriculum **is** the correction log, so whose judgment trained the reader *stays a query, not a mystery*. Both cannot hold for the same reader. If a member cannot query another member's events, they cannot query the corrections that trained the reader they are asked to trust; if they can, the unqueryability claim is narrower than it reads. The exit is probably that corrections are a record class of their own in the map's terms rather than ordinary member events — but that is a map question, and it belongs in the ledger below rather than in an app.
+
+Added to the open ledger:
+
+9. **Which kinds the machine class may write**, stated once, in the terms the RLS predicate will use.
+10. **Whether `disagreement.noted` is a kind, a staged payload, or neither.**
+11. **The record class of a correction** — what a member may query of another member's corrections without breaking the share's unqueryability.
