@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#101014">
+<meta name="description" content="The Daybook, public beta — one shared journal, read seven ways. Demonstration seed, in memory only.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<title>The Daybook · public beta · Techne</title>
+<!-- Served route of the Daybook public beta. Derived from prototypes/daybook-beta-v3.html
+     (canonical for behavior, unchanged at its path) at f4a3a40. Divergences from the
+     prototype are deliberate and listed in the commit that made them. -->
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');</script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   type is provenance:
+   serif  = the human voice (entries, names, chrome)
+   mono   = the record's grammar only (addresses, kinds,
+            the reader's reasons, seals, the log)
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --serif:"Libre Baskerville",Georgia,serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;
+  --micro:.16s;--dur:.34s;--slow:.5s;--ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.32,1.25,.5,1);
+  --rail:220px;--pane:440px;--bar:58px;
+}
+html[data-mode="dark"]{
+  --bg:#101014;--inset:#0A0A0D;--surface:#17171C;--raised:#1E1E24;
+  --line:#26262D;--rule:#3A3A42;
+  --heading:#EAE6E0;--text:#CFCBC4;--muted:#8D8880;--faint:#5C574F;
+  --blue:#6A8AC4;--blue-text:#9AB7E8;--ember:#C4956A;--ember-text:#D6A87C;
+  --l:#8FAEE0;--a:#EAB668;--m:#DE8872;--t:#9E86C4;
+  --shadow:0 18px 60px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.4);
+  --shadow-fab:0 6px 22px rgba(0,0,0,.5);
+}
+html[data-mode="light"]{
+  --bg:#F6F4EE;--inset:#ECE8DF;--surface:#FDFCF9;--raised:#FFFFFE;
+  --line:#DCD7CB;--rule:#9A958A;
+  --heading:#1A1A1F;--text:#2E2C28;--muted:#645F57;--faint:#A49E92;
+  --blue:#48679C;--blue-text:#39588F;--ember:#8A6A4A;--ember-text:#6F5436;
+  --l:#3A5694;--a:#87621F;--m:#9C4636;--t:#4C3870;
+  --shadow:0 18px 60px rgba(40,35,25,.22),0 2px 10px rgba(40,35,25,.12);
+  --shadow-fab:0 6px 20px rgba(40,35,25,.28);
+}
+*{box-sizing:border-box}
+html{color-scheme:dark light}
+body{
+  margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+  font:400 15px/1.72 var(--serif);
+  transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease);
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:2px}
+button{font-family:var(--serif);cursor:pointer}
+input,textarea{font-family:var(--serif)}
+
+.app{display:flex;min-height:100vh}
+
+/* ── rail: serif chrome, quiet ── */
+.rail{
+  flex:0 0 var(--rail);border-right:1px solid var(--line);background:var(--bg);
+  position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
+  padding:var(--s5) var(--s4);
+}
+.rail .brand{font:700 17px/1.2 var(--serif);color:var(--heading);letter-spacing:-.01em;margin-bottom:var(--s5)}
+.rg{margin-bottom:var(--s4)}
+.rg .rk{font:400 10.5px/1.6 var(--serif);font-style:italic;color:var(--faint);margin-bottom:2px;padding-left:10px}
+.rbtn{
+  display:flex;width:100%;align-items:center;gap:var(--s2);
+  font:400 13px/1.3 var(--serif);color:var(--muted);background:transparent;border:none;
+  padding:8px 10px;border-radius:3px;text-align:left;position:relative;min-height:34px;
+  transition:color var(--micro) var(--ease),background-color var(--micro) var(--ease);
+}
+.rbtn:hover{color:var(--heading);background:var(--surface)}
+.rbtn[aria-current="true"]{color:var(--heading);background:var(--surface)}
+.rbtn[aria-current="true"]::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:2px;background:var(--blue);border-radius:1px}
+.rbtn .cnt{margin-left:auto;font:400 10px/1 var(--mono);color:var(--faint)}
+.rail .write{
+  font:400 13.5px/1 var(--serif);color:var(--bg);background:var(--blue);border:1px solid var(--blue);
+  border-radius:3px;padding:11px 12px;width:100%;margin-bottom:var(--s5);
+  transition:opacity var(--micro) var(--ease);
+}
+.rail .write:hover{opacity:.92}
+.rail .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:var(--s3)}
+.rail .foot .rbtn{font-size:12px;padding:6px 10px;min-height:30px}
+.rail .cord{
+  display:block;width:100%;text-align:left;font:400 11.5px/1.5 var(--serif);font-style:italic;
+  color:var(--ember-text);background:transparent;border:none;padding:8px 10px;border-radius:3px;
+}
+.rail .cord:hover{background:var(--surface)}
+
+.main{flex:1;min-width:0;display:flex;justify-content:center}
+.col{width:min(720px,100%);padding:var(--s5) var(--s5) calc(var(--bar) + var(--s7));display:flex;flex-direction:column}
+
+.mtop{display:none;align-items:center;gap:var(--s3);padding:var(--s4) 0 var(--s2)}
+.mtop b{font:700 17px/1.2 var(--serif);color:var(--heading)}
+.mtop .qbtn{margin-left:auto}
+.qbtn{font:400 12px/1 var(--serif);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:3px;padding:0 11px;height:30px;display:inline-flex;align-items:center;transition:color var(--micro) var(--ease),border-color var(--micro) var(--ease)}
+.qbtn:hover{color:var(--heading);border-color:var(--rule)}
+
+/* ── bottom bar ── */
+.bar{
+  display:none;position:fixed;left:0;right:0;bottom:0;height:calc(var(--bar) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);z-index:20;
+}
+.bar .brow{display:flex;height:var(--bar);align-items:stretch}
+.bbtn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font:400 10px/1.2 var(--serif);color:var(--faint);background:transparent;border:none;min-height:44px;
+}
+.bbtn .glyph{font:600 14px/1 var(--serif)}
+.bbtn[aria-current="true"]{color:var(--heading)}
+.bbtn[aria-current="true"] .glyph{color:var(--blue-text)}
+.penfab{flex:0 0 72px;display:flex;align-items:center;justify-content:center;background:transparent;border:none}
+.penfab .disc{
+  width:46px;height:46px;border-radius:50%;background:var(--blue);color:var(--bg);
+  display:flex;align-items:center;justify-content:center;font:600 19px/1 var(--serif);
+  margin-top:-16px;box-shadow:var(--shadow-fab);
+  transition:transform var(--micro) var(--spring);
+}
+.penfab:active .disc{transform:scale(.94)}
+
+/* ── views ── */
+.view{display:none;flex-direction:column;flex:1}
+.view.on{display:flex}
+.vtitle h1{font:700 22px/1.3 var(--serif);color:var(--heading);margin:0 0 var(--s1);letter-spacing:-.01em}
+.vhead{margin:0 0 var(--s4);font-size:12.5px;color:var(--muted);font-style:italic;max-width:58ch}
+.lens{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;align-self:flex-start;margin-bottom:var(--s4)}
+.lbtn{font:400 11px/1 var(--serif);color:var(--faint);background:transparent;border:none;padding:7px 12px;min-height:30px}
+.lbtn[aria-current="true"]{color:var(--heading);background:var(--surface)}
+
+/* ── the pen ── */
+.inlinepen{display:block;margin-bottom:var(--s5)}
+textarea.pen{
+  width:100%;min-height:88px;resize:vertical;background:var(--surface);border:1px solid var(--rule);
+  border-radius:4px;color:var(--text);font:400 15px/1.72 var(--serif);padding:var(--s4);
+  transition:border-color var(--micro) var(--ease),box-shadow var(--micro) var(--ease);
+}
+textarea.pen:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 16%,transparent);outline:none}
+textarea.pen::placeholder{color:var(--faint);font-style:italic}
+.penrow{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s2)}
+.stamp{font:400 10px/1.4 var(--mono);color:var(--faint);margin-right:auto}
+.enter{font:400 13px/1 var(--serif);color:var(--bg);background:var(--blue);border:1px solid var(--blue);border-radius:3px;padding:0 18px;height:34px;transition:opacity var(--micro) var(--ease)}
+.enter:hover{opacity:.9}
+.cordline{
+  font:400 11px/1.5 var(--serif);font-style:italic;color:var(--ember-text);background:transparent;border:none;
+  padding:8px 0 0;text-align:left;border-bottom:1px solid transparent;align-self:flex-start;
+}
+.cordline:hover{border-bottom-color:var(--ember)}
+
+/* ── the stream: room to breathe, the frank in the margin ── */
+.entry{position:relative;padding:var(--s4) 0 var(--s5);border-top:1px solid var(--line)}
+.entry.new{animation:settle var(--slow) var(--spring)}
+@keyframes settle{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.entry .body{margin:0 0 var(--s2);max-width:60ch;font-size:15.5px}
+.mn{color:var(--blue-text);border-bottom:1px dotted var(--blue);cursor:pointer}
+.thlink{color:var(--ember-text);border-bottom:1px dotted var(--ember);cursor:pointer;font-style:italic}
+.meta{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.who{font:400 12px/1.4 var(--serif);color:var(--faint);font-style:italic}
+.who b{color:var(--muted);font-weight:600;font-style:normal}
+
+/* the frank: the address as a pressed mark — the one signature */
+.addr{
+  font:600 9.5px/1 var(--mono);color:color-mix(in srgb,var(--blue-text) 80%,var(--muted));
+  border:1px solid color-mix(in srgb,var(--blue) 45%,transparent);
+  border-radius:2px;padding:3px 6px;cursor:pointer;position:relative;
+  transform:rotate(-1.2deg);letter-spacing:.04em;background:transparent;
+  transition:border-color var(--micro) var(--ease),color var(--micro) var(--ease);
+}
+.addr:hover{border-color:var(--blue);color:var(--blue-text)}
+.addr.franked{animation:frank .55s var(--spring)}
+@keyframes frank{0%{transform:rotate(-6deg) scale(1.3);opacity:0}60%{transform:rotate(-1.2deg) scale(.97);opacity:1}100%{transform:rotate(-1.2deg) scale(1)}}
+.addr .copied{
+  position:absolute;left:50%;top:-20px;transform:translateX(-50%);
+  font:400 9px/1 var(--serif);font-style:italic;color:var(--muted);white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity var(--micro) var(--ease);
+}
+.addr.did .copied{opacity:1}
+@media (min-width:881px){
+  .col{padding-left:calc(var(--s5) + 58px)}
+  .entry .addr{position:absolute;left:-58px;top:calc(var(--s4) + 3px)}
+}
+
+/* chips: the record's grammar, in mono */
+.chip{font:500 9.5px/1 var(--mono);padding:4px 8px;border-radius:2px;text-transform:lowercase;letter-spacing:.03em;display:inline-flex;align-items:center;gap:5px}
+.chip.c{border:1px solid var(--line);color:var(--muted)}
+.chip.p{
+  color:var(--ember-text);cursor:pointer;border:none;position:relative;background:transparent;
+  --dash:color-mix(in srgb,var(--ember) 85%,transparent);
+  background-image:
+    repeating-linear-gradient(90deg,var(--dash) 0 5px,transparent 5px 9px),
+    repeating-linear-gradient(90deg,var(--dash) 0 5px,transparent 5px 9px),
+    repeating-linear-gradient(0deg,var(--dash) 0 5px,transparent 5px 9px),
+    repeating-linear-gradient(0deg,var(--dash) 0 5px,transparent 5px 9px);
+  background-size:100% 1px,100% 1px,1px 100%,1px 100%;
+  background-position:0 0,0 100%,0 0,100% 0;background-repeat:no-repeat;
+}
+.chip.p:hover{--dash:var(--ember)}
+.chip.arrive{animation:arrive .5s var(--spring)}
+@keyframes arrive{from{opacity:0;transform:translateY(4px) scale(.9)}to{opacity:1;transform:none}}
+.chip.think{border:none;color:var(--faint);background:linear-gradient(90deg,var(--faint) 25%,var(--muted) 50%,var(--faint) 75%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.inkset{animation:inkset .45s var(--ease)}
+@keyframes inkset{0%{background-color:color-mix(in srgb,var(--blue) 22%,transparent)}100%{background-color:transparent}}
+
+/* the reader's reasons: mono, the machine speaking */
+.why{display:none;margin-top:var(--s3);border-left:2px solid var(--ember);padding:var(--s2) 0 var(--s2) var(--s3);font:400 11px/1.8 var(--mono);color:var(--muted)}
+.why.on{display:block;animation:settle var(--dur) var(--ease)}
+.why .wk{font:500 9px/1.6 var(--mono);color:var(--ember-text);letter-spacing:.08em;display:block;margin-bottom:2px;text-transform:uppercase}
+.why .acts{display:flex;gap:var(--s2);margin-top:var(--s2);flex-wrap:wrap}
+.wbtn{font:400 11.5px/1 var(--serif);padding:7px 12px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--muted);min-height:30px}
+.wbtn:hover{color:var(--heading);border-color:var(--rule)}
+.wbtn.yes{border-color:var(--blue);color:var(--heading)}
+.say{width:100%;min-height:54px;resize:vertical;background:var(--bg);border:1px solid var(--rule);border-radius:3px;color:var(--text);font:400 13px/1.6 var(--serif);padding:10px;margin-top:var(--s2)}
+.say::placeholder{color:var(--faint);font-style:italic}
+.dayhead{font:400 12px/1.6 var(--serif);font-style:italic;color:var(--ember-text);border-top:1px solid var(--rule);padding:var(--s3) 0 0;margin-top:var(--s3)}
+.dayhead small{color:var(--faint);margin-left:var(--s2);font-style:normal}
+
+/* skeleton */
+.skel{border-top:1px solid var(--line);padding:var(--s4) 0 var(--s5)}
+.skel div{height:12px;border-radius:3px;background:linear-gradient(90deg,var(--surface) 25%,var(--raised) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.2s linear infinite;margin-bottom:8px}
+.skel .w1{width:82%}.skel .w2{width:64%}.skel .w3{width:30%;height:9px}
+
+/* rows */
+.row{border-top:1px solid var(--line);padding:var(--s4) 0;cursor:pointer;border-radius:3px;transition:background-color var(--micro) var(--ease)}
+.row:hover{background:color-mix(in srgb,var(--surface) 60%,transparent)}
+.row .r1{display:flex;align-items:baseline;gap:var(--s2);flex-wrap:wrap}
+.row .rn{font:600 15px/1.4 var(--serif);color:var(--heading)}
+.row .rn.prop{color:var(--ember-text);font-style:italic;font-weight:400}
+.row .last{margin-left:auto;font:400 11px/1.4 var(--serif);font-style:italic;color:var(--faint);white-space:nowrap}
+.row .sub{margin:3px 0 0;font-size:12.5px;color:var(--muted);max-width:58ch}
+.row .mline{margin-top:6px;font:400 9.5px/1.7 var(--mono);color:var(--faint)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted);background:var(--surface);margin-right:var(--s2);vertical-align:1px}
+.dot.f{border-color:var(--blue);background:var(--blue)}
+.schip{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:2px;text-transform:lowercase}
+.schip.a{border:1px solid var(--line);color:var(--blue-text)}
+.schip.d{border:1px solid var(--line);color:var(--faint)}
+.schip.f{border:1px dashed var(--ember);color:var(--ember-text)}
+.schip.q{border:1px solid var(--line);color:var(--blue-text)}
+.schip.w{border:1px solid var(--line);color:var(--ember-text)}
+.schip.x{border:1px solid var(--ember);color:var(--ember-text)}
+.sect{font:400 12.5px/1.6 var(--serif);font-style:italic;color:var(--ember-text);margin:var(--s5) 0 var(--s1);border-bottom:1px solid var(--line);padding-bottom:5px}
+.view .sect:first-of-type{margin-top:0}
+.vfoot{font:400 11px/1.7 var(--serif);font-style:italic;color:var(--faint);padding:var(--s4) 0 var(--s2);max-width:56ch;margin-top:auto}
+.wgrid{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.word{font:400 11px/1 var(--mono);border:1px solid var(--line);border-radius:2px;padding:7px 10px;background:var(--surface);color:var(--text);cursor:pointer;min-height:30px}
+.word small{color:var(--faint);margin-left:6px}
+.word.one{border-style:dashed;color:var(--muted)}
+.word.new{border-color:var(--ember);color:var(--ember-text)}
+.sh{border:1px solid var(--line);background:var(--surface);border-radius:3px;padding:var(--s3) var(--s4);margin-bottom:var(--s2)}
+.sh .k{font:400 11px/1.5 var(--serif);font-style:italic;color:var(--muted)}
+.sh .v{font:400 13.5px/1.6 var(--serif);color:var(--text)}
+.sh .v b{color:var(--heading)}
+
+/* ── the pane: one of three elevations ── */
+.scrim{position:fixed;inset:0;background:color-mix(in srgb,var(--inset) 58%,transparent);opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease);z-index:28;backdrop-filter:blur(2px)}
+.scrim.on{opacity:1;pointer-events:auto}
+.pane{
+  position:fixed;top:0;right:0;bottom:0;width:min(var(--pane),100vw);
+  background:var(--surface);border-left:1px solid var(--line);z-index:29;
+  transform:translateX(103%);transition:transform var(--dur) var(--spring);
+  display:flex;flex-direction:column;box-shadow:var(--shadow);
+}
+.pane.on{transform:none}
+.pane.drag{transition:none}
+.pane .phead{display:flex;align-items:center;gap:var(--s3);padding:var(--s4) var(--s5);border-bottom:1px solid var(--line);touch-action:none}
+.pane .phead .grab{display:none}
+.pane .phead .pk{font:400 11px/1.4 var(--serif);font-style:italic;color:var(--ember-text)}
+.pane .pclose{margin-left:auto;font:400 11px/1 var(--serif);color:var(--faint);background:none;border:1px solid var(--line);border-radius:3px;padding:6px 11px;min-height:30px}
+.pane .pclose:hover{color:var(--heading);border-color:var(--rule)}
+.pane .pbody{flex:1;overflow-y:auto;padding:var(--s5)}
+.pane h3{font:700 22px/1.25 var(--serif);color:var(--heading);margin:0 0 var(--s2);letter-spacing:-.01em}
+.pane .std{font:400 11.5px/1.5 var(--serif);font-style:italic;color:var(--muted);margin-bottom:var(--s3)}
+.pane p{margin:0 0 var(--s3);font-size:13.5px;max-width:58ch}
+.pane .csect{font:400 12.5px/1.6 var(--serif);font-style:italic;color:var(--ember-text);margin:var(--s4) 0 var(--s2);border-bottom:1px solid var(--line);padding-bottom:4px}
+.pane .tent{border-left:2px solid var(--line);padding:var(--s2) 0 var(--s2) var(--s3);margin-bottom:var(--s2)}
+.pane .tent p{margin:0;font-size:13px}
+.pane .tent .tw{font:400 9.5px/1.7 var(--mono);color:var(--faint)}
+.pane .fine{font:400 11px/1.7 var(--serif);font-style:italic;color:var(--faint);max-width:54ch}
+.pane .actions{display:flex;gap:var(--s2);margin-top:var(--s4);flex-wrap:wrap}
+.tbtn{font:400 12.5px/1 var(--serif);color:var(--heading);background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:0 15px;height:34px;display:inline-flex;align-items:center;transition:background-color var(--micro) var(--ease),border-color var(--micro) var(--ease)}
+.tbtn:hover{background:var(--raised);border-color:var(--heading)}
+.tbtn.go{color:var(--bg);background:var(--blue);border-color:var(--blue)}
+.attr{border:1px solid var(--line);border-left:3px solid var(--bc);border-radius:3px;padding:var(--s3) var(--s4);margin-bottom:var(--s2)}
+.attr .ak{display:flex;align-items:baseline;gap:var(--s2)}
+.attr .ak b{font:600 13px/1.4 var(--serif);color:var(--heading)}
+.attr .ak span{margin-left:auto;font:400 9.5px/1.4 var(--mono);color:var(--bc)}
+.attr p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.attr .vals{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+.attr .vals i{font:400 10px/1 var(--mono);font-style:normal;color:var(--text);border:1px solid var(--line);border-radius:2px;padding:5px 8px;background:var(--bg)}
+.attr.thin{border-left-style:dashed}
+.attr.thin p{font-style:italic}
+.ninput{flex:1;background:var(--bg);border:1px solid var(--rule);border-radius:3px;color:var(--text);font:400 13px/1.5 var(--serif);padding:9px 12px;min-width:150px}
+.prog{display:flex;gap:5px;margin:var(--s3) 0 var(--s4)}
+.prog span{flex:1;height:3px;background:var(--line);border-radius:1px}
+.prog span.done{background:var(--ember)}
+.rbody{border:1px solid var(--line);border-radius:3px;background:var(--bg);padding:var(--s4);font-size:14.5px;margin-bottom:var(--s3)}
+.inf{border-left:2px solid var(--ember);padding:var(--s2) 0 var(--s2) var(--s3);font:400 11px/1.8 var(--mono);color:var(--muted);margin-bottom:var(--s3)}
+.inf .wk{font:500 9px/1.6 var(--mono);color:var(--ember-text);display:block;margin-bottom:2px;letter-spacing:.08em;text-transform:uppercase}
+.inf b{color:var(--heading)}
+.logrow{font:400 10px/1.85 var(--mono);color:var(--muted);border-bottom:1px solid var(--line);padding:5px 0;display:flex;gap:var(--s3)}
+.logrow .la{color:var(--blue-text);flex:0 0 42px}
+.logrow .lk{color:var(--ember-text);flex:0 0 140px}
+.logrow .lb{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.morelist .rbtn{font-size:14px;padding:14px 10px;border-bottom:1px solid var(--line);border-radius:0;min-height:48px}
+
+/* guest */
+body.guest .rail .write,body.guest .rail .g-hide,body.guest .bar,body.guest .inlinepen{display:none!important}
+body.guest .guestbar{display:flex}
+.guestbar{display:none;align-items:baseline;gap:var(--s3);border:1px solid var(--ember);border-radius:3px;padding:var(--s3) var(--s4);margin-bottom:var(--s4);font-size:12.5px;color:var(--muted)}
+.guestbar b{color:var(--ember-text);font:400 11px/1.4 var(--serif);font-style:italic}
+.guestbar button{margin-left:auto}
+
+@media (max-width:880px){
+  .rail{display:none}
+  .bar{display:block}
+  .mtop{display:flex}
+  .col{padding:0 var(--s4) calc(var(--bar) + var(--s7))}
+  .inlinepen{display:none}
+  .entry .addr{position:static;margin-right:2px}
+  .pane{
+    top:auto;left:0;right:0;bottom:0;width:100%;max-height:88vh;border-left:none;border-top:1px solid var(--line);
+    transform:translateY(104%);border-radius:14px 14px 0 0;
+  }
+  .pane.on{transform:none}
+  .pane .phead .grab{display:block;width:36px;height:4px;border-radius:2px;background:var(--rule);margin:0 auto}
+  .pane .phead{flex-direction:column;gap:var(--s2);align-items:stretch;padding:var(--s2) var(--s5) var(--s2);cursor:grab}
+  .pane .phead .prow{display:flex;align-items:center;gap:var(--s3)}
+  .pane .pbody{padding:var(--s4) var(--s5) calc(var(--s6) + env(safe-area-inset-bottom))}
+}
+@media (min-width:881px){.pane .phead .prow{display:contents}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="rail" aria-label="Views">
+    <div class="brand">The Daybook</div>
+    <button class="write g-hide" id="writeBtn">Write</button>
+    <div class="rg">
+      <div class="rk">daily</div>
+      <button class="rbtn" data-view="journal">Journal</button>
+      <button class="rbtn g-hide" data-view="threads">Threads</button>
+      <button class="rbtn g-hide" data-view="open">The Open<span class="cnt" id="openCnt"></span></button>
+    </div>
+    <div class="rg g-hide">
+      <div class="rk">the readings</div>
+      <button class="rbtn" data-view="people">People</button>
+      <button class="rbtn" data-view="gather">Gatherings</button>
+      <button class="rbtn" data-view="words">Words</button>
+    </div>
+    <div class="rg g-hide">
+      <div class="rk">yours</div>
+      <button class="rbtn" data-view="share">Your Share</button>
+      <button class="rbtn" id="railReread">Rereading</button>
+    </div>
+    <div class="foot">
+      <p style="margin:0 0 8px;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Demonstration seed. Every entry, wager, question and disagreement below is invented for this prototype. The names are real members of the cooperative; none of the writing attributed to them is theirs.</p>
+      <p style="margin:0 0 8px;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Public beta, unadopted and undeployed. Everything here lives in memory and is gone on reload — nothing persists, nothing syncs, nothing touches the record. The reader is a word-pattern stand-in for the live one.</p>
+      <button class="rbtn" id="railMethod">the method</button>
+      <button class="rbtn" id="railLog">the record itself</button>
+      <button class="rbtn g-hide" id="railGuest">view as guest</button>
+      <button class="rbtn" id="railMode">light</button>
+      <button class="cord g-hide" id="railCord">something is wrong<br>with how we're working</button>
+    </div>
+  </nav>
+
+  <main class="main"><div class="col">
+    <div class="mtop">
+      <b>The Daybook</b>
+      <button class="qbtn" id="mMode">light</button>
+    </div>
+    <div class="guestbar" id="guestbar">
+      <b>reading as a guest</b><span>The record, as members have confirmed it. Writing is what membership is. This is a public beta on an invented demonstration seed, in memory only — not the record.</span>
+      <button class="qbtn" id="leaveGuest">member view</button>
+    </div>
+
+    <section class="view" id="v-journal">
+      <div class="inlinepen">
+        <textarea class="pen" id="penInline" placeholder="Write what happened, what you wonder, what you'd bet on."></textarea>
+        <div class="penrow">
+          <span class="stamp">Todd · today · kept in the record</span>
+          <button class="enter" id="enterInline">Enter</button>
+        </div>
+        <button class="cordline" id="cordInline">something is wrong with how we're working</button>
+      </div>
+      <div class="lens" role="group" aria-label="Stream lens">
+        <button class="lbtn" data-lens="stream" aria-current="true">stream</button>
+        <button class="lbtn" data-lens="days" aria-current="false">by day</button>
+      </div>
+      <div id="stream"></div>
+    </section>
+
+    <section class="view" id="v-people">
+      <div class="vtitle"><h1>People</h1></div>
+      <p class="vhead">The people your journal has woven you to — you wrote about them, or they wrote about you. A filled point runs both ways.</p>
+      <div id="plist"></div>
+    </section>
+
+    <section class="view" id="v-threads">
+      <div class="vtitle"><h1>Threads</h1></div>
+      <p class="vhead">What the co-op keeps writing about. Threads gather on their own; members name and keep them.</p>
+      <div id="tlist"></div>
+      <p class="vfoot">A dashed thread is still forming — waiting for a member to say so and name it. Unthreaded writing stays unthreaded, respectably.</p>
+    </section>
+
+    <section class="view" id="v-open">
+      <div class="vtitle"><h1>The Open</h1></div>
+      <p class="vhead">Everything holding a future: questions with owners, wagers with sealed terms, contests before the room. Resolution is always a member act, entered as a new entry.</p>
+      <div id="openlist"></div>
+      <p class="vfoot">Nothing here nags. Age is shown so the room can see it — not so you feel it.</p>
+    </section>
+
+    <section class="view" id="v-gather">
+      <div class="vtitle"><h1>Gatherings</h1></div>
+      <p class="vhead">The record of meeting: the close and the demo, what's coming and what each left behind.</p>
+      <div id="glist"></div>
+    </section>
+
+    <section class="view" id="v-words">
+      <div class="vtitle"><h1>Words</h1></div>
+      <p class="vhead">The co-op's language, forming in use. This is also the reader's dictionary — held up for inspection.</p>
+      <div id="wlist"></div>
+      <p class="vfoot">A word joins the lexicon by use, not decree.</p>
+    </section>
+
+    <section class="view" id="v-share">
+      <div class="vtitle"><h1>Your Share</h1></div>
+      <p class="vhead">Your part, computed as a reading of the record — never a score, never comparative. Another member's share is unqueryable, not merely unshown.</p>
+      <div id="shlist"></div>
+      <p class="vfoot">What this view may measure was examined by members before it was built. If it starts to feel like a scoreboard, that is a contest worth filing.</p>
+    </section>
+  </div></main>
+</div>
+
+<nav class="bar" aria-label="Views"><div class="brow">
+  <button class="bbtn" data-view="journal"><span class="glyph">¶</span>Journal</button>
+  <button class="bbtn" data-view="threads"><span class="glyph">≡</span>Threads</button>
+  <button class="penfab" id="penFab" aria-label="Write"><span class="disc">✎</span></button>
+  <button class="bbtn" data-view="open"><span class="glyph">◌</span>Open</button>
+  <button class="bbtn" id="moreBtn"><span class="glyph">···</span>More</button>
+</div></nav>
+
+<div class="scrim" id="scrim"></div>
+<aside class="pane" id="pane" role="dialog" aria-modal="true">
+  <div class="phead" id="phead">
+    <div class="grab"></div>
+    <div class="prow">
+      <span class="pk" id="paneKick">detail</span>
+      <button class="pclose" id="paneClose">release · esc</button>
+    </div>
+  </div>
+  <div class="pbody" id="paneBody"></div>
+</aside>
+
+<script>
+(function(){
+"use strict";
+/* engine: identical schema to v2 — one growing log, views as folds */
+/* D-01: the reader is not an agent row and holds no grant. It writes nothing. */
+var agents={todd:{id:'todd',name:'Todd',cls:'member'},aaron:{id:'aaron',name:'Aaron',cls:'member'},kevin:{id:'kevin',name:'Kevin',cls:'member'},lucien:{id:'lucien',name:'Lucien',cls:'member'},jo:{id:'jo',name:'Jo',cls:'member'}};
+var VIEWER='todd',TYPES=['note','question','wager','demo','close','contest'];
+var events=[],nextAddr=1;
+function ev(agent,kind,body,about,ago,label){var e={id:events.length+1,addr:'\u00a7'+(nextAddr++),agent:agent,kind:kind,body:body||{},about:about||null,ago:ago,when:label||'just now'};events.push(e);return e}
+function findByAddr(a){return events.find(function(e){return e.addr===a})}
+/* D-03: staging. Not the record — no agent, no kind, no address, freely dropped.
+   Held under the viewer's own identity; nothing here has entered events. */
+var staged=[],nextStage=1;
+function stage(body,about,ago){var p={sid:nextStage++,body:body||{},about:about||null,ago:ago};staged.push(p);return p}
+function stagedFor(addr){for(var i=staged.length-1;i>=0;i--){if(staged[i].about===addr&&!staged[i].body.forming)return staged[i]}return null}
+function unstage(addr){staged=staged.filter(function(p){return !(p.about===addr&&!p.body.forming)})}
+var threads=[{id:'treasury',name:'the treasury thread',namedBy:'lucien'},{id:'measure',name:'the onboarding measure',namedBy:'kevin'},{id:'threshold',name:'the guest threshold',namedBy:'aaron'}];
+var terms=[{t:'the close',voices:6,uses:31},{t:'the pen',voices:5,uses:24},{t:'warrant',voices:4,uses:19},{t:'the threshold',voices:4,uses:17},{t:'provenance',voices:3,uses:12},{t:'reconciliation',voices:1,uses:8,one:'Lucien'},{t:'the fold',voices:1,uses:6,one:'Todd'},{t:'the weaving',voices:3,uses:4,fresh:'coined by Jo \u00b7 spreading'}];
+var E={};
+E.tnote=ev('todd','entry.written',{text:'Reconciled the share ledger against the patronage entries. The fold and the treasury\u2019s books agree, which is the point of having one record.',type:'note',thread:'treasury',mentions:[]},null,24,'3 weeks ago');
+stage({type:'note',thread:'treasury',reason:'uses \u201creconciled\u201d and \u201cledger\u201d, terms this thread owns'},E.tnote.addr,24);
+ev('todd','inference.confirmed',{},E.tnote.addr,24);
+E.lcite=ev('lucien','entry.written',{text:'{todd}\u2019s treasury note saved me an hour of reconstruction. Citing it here.',type:'note',thread:'treasury',mentions:['todd'],cites:[E.tnote.addr]},null,21,'3 weeks ago');
+ev('lucien','inference.confirmed',{},E.lcite.addr,21);
+E.rq=ev('aaron','entry.written',{text:'What if the reading surface for guests was just the last thirty confirmed entries? No navigation, no explanation.',type:'question',thread:null,mentions:[]},null,8,'last week');
+ev('aaron','inference.confirmed',{},E.rq.addr,8);
+E.kcon=ev('kevin','entry.written',{text:'Contest: speed of completion selects for speed, not capability. The measure is examined before the trial runs.',type:'contest',thread:'measure',mentions:[]},null,7,'last week');
+ev('kevin','inference.confirmed',{},E.kcon.addr,7);
+ev('kevin','contest.filed',{what:'the trial measure',carried:'Wednesday close \u00b7 week 36'},E.kcon.addr,7,'last week');
+ev('aaron','question.owned',{q:'Where does the guest threshold sit?',owner:'Aaron, with members',thread:'threshold'},null,21,'open 3 weeks');
+ev('todd','question.owned',{q:'What may judge the onboarding trial?',owner:'Todd, with members',thread:'measure'},null,14,'open 2 weeks');
+E.close35=ev('todd','gathering.held',{what:'Wednesday close \u00b7 week 35',left:'1 decision with warrant \u00b7 1 question re-owned \u00b7 2 entries'},null,5,'Aug 26');
+E.demoP=ev('todd','demo.promised',{what:'Launch follow-up demo',claims:'capture, chips, the day lens'},null,11,'Aug 20');
+ev('todd','demo.reported',{status:'shown \u00b7 two claims failed \u00b7 one contest filed'},E.demoP.addr,10,'Aug 21');
+E.wclose=ev('todd','entry.written',{text:'Wednesday room went long. {kevin} kept us honest about the measure before anyone ran the trial.',type:'close',thread:'measure',mentions:['kevin']},null,5,'Wednesday');
+stage({type:'close',thread:'measure',reason:'names the Wednesday room; \u201cthe measure\u201d is this thread\u2019s own term'},E.wclose.addr,5);
+ev('todd','inference.confirmed',{},E.wclose.addr,5);
+E.wager=ev('todd','entry.written',{text:'I bet {aaron} that if practice notes ship with the next update, support questions drop by half. He took it.',type:'wager',thread:null,mentions:['aaron']},null,1,'yesterday');
+ev('todd','inference.confirmed',{},E.wager.addr,1);
+ev('todd','wager.sealed',{terms:'support questions in the fortnight after release \u003c 50% of last cycle',hash:'sha-9f2c\u2026 sealed yesterday',counterparty:'aaron',resolves:'Oct 1'},E.wager.addr,1,'yesterday');
+E.aq=ev('aaron','entry.written',{text:'{todd} and I disagree about where the guest threshold sits. Logging it here so we argue it in the open.',type:'question',thread:'threshold',mentions:['todd']},null,1,'yesterday');
+stage({type:'question',thread:'threshold',reason:'ends open-ended; \u201cthe threshold\u201d is this thread\u2019s own term; names Todd, who is in it'},E.aq.addr,1);
+E.jform=ev('jo','entry.written',{text:'The record should introduce itself. No navigation, no explanation \u2014 the weaving shows itself.',type:'note',thread:null,mentions:[]},null,0,'today');
+stage({type:'note',thread:null,reason:'no question mark, no stake named'},E.jform.addr,0);
+stage({forming:['reading surface',E.rq.addr,E.jform.addr],reason:'shares \u201creading surface\u201d words and a span of days with '+E.rq.addr+' \u00b7 no member\u2019s hand yet'},E.jform.addr,0);
+E.walk=ev('todd','entry.written',{text:'Walked {jo} through the pen today \u2014 her first entries are already sharper questions than my early notes were.',type:'note',thread:'threshold',mentions:['jo']},null,0,'today');
+stage({type:'note',thread:'threshold',reason:'uses \u201cthe pen\u201d and \u201cwalkthrough\u201d; names Jo; a day after '+E.aq.addr},E.walk.addr,0);
+ev('aaron','inference.corrected',{was:'note',now:'question',reason:'it asks, even without the mark'},E.rq.addr,8);
+ev('kevin','inference.corrected',{was:'note',now:'contest',reason:'it interrupts, it doesn\u2019t observe'},E.kcon.addr,7);
+var corrTally={aaron:14,kevin:9,todd:4,lucien:2,jo:1};
+
+function latestAssertion(entry){
+  var chain=events.filter(function(e){return e.about===entry.addr&&/^inference\./.test(e.kind)});
+  var st='thinking',type=entry.body.type,thread=entry.body.thread,reason=null;
+  var pr=stagedFor(entry.addr);
+  if(pr){st='proposed';type=pr.body.type;thread=pr.body.thread;reason=pr.body.reason}
+  chain.forEach(function(e){
+    if(e.kind==='inference.confirmed'){st='confirmed';if(e.body.proposal){type=e.body.proposal.type||type;thread=e.body.proposal.thread||thread}}
+    if(e.kind==='inference.corrected'){st='confirmed';type=e.body.now||type}
+  });
+  /* Divergence from the prototype: an entry with no type, no staging and no chain is
+     the moment between the pen and the reader — show "reading…" rather than "null". */
+  if(!chain.length&&!pr)st=(type===null?'thinking':'confirmed');
+  return {st:st,type:type,thread:thread,reason:reason};
+}
+function foldEntries(g){return events.filter(function(e){return e.kind==='entry.written'}).map(function(e){return {e:e,a:latestAssertion(e)}}).filter(function(x){return !g||x.a.st==='confirmed'}).sort(function(x,y){return x.e.ago-y.e.ago||y.e.id-x.e.id})}
+function foldPeople(v){
+  var out={};
+  events.forEach(function(e){
+    if(e.kind!=='entry.written')return;
+    (e.body.mentions||[]).forEach(function(m){
+      if(e.agent===v&&m!==v){out[m]=out[m]||{to:0,from:0};out[m].to++}
+      if(m===v&&e.agent!==v){out[e.agent]=out[e.agent]||{to:0,from:0};out[e.agent].from++}
+    });
+    (e.body.cites||[]).forEach(function(c){var t=findByAddr(c);if(t&&t.agent===v&&e.agent!==v){out[e.agent]=out[e.agent]||{to:0,from:0};out[e.agent].from++}});
+  });
+  return Object.keys(out).map(function(id){var o=out[id];return {agent:agents[id],to:o.to,from:o.from,mutual:o.to>0&&o.from>0}});
+}
+function foldThread(tid){
+  var ents=foldEntries(false).filter(function(x){return x.a.thread===tid});
+  var qs=events.filter(function(e){return e.kind==='question.owned'&&e.body.thread===tid});
+  var ppl={};ents.forEach(function(x){ppl[x.e.agent]=1;(x.e.body.mentions||[]).forEach(function(m){ppl[m]=1})});
+  return {entries:ents,questions:qs,people:Object.keys(ppl),alive:ents.some(function(x){return x.e.ago<=7}),last:ents.length?ents[0].e.when:'\u2014'};
+}
+function foldForming(){return staged.filter(function(p){return p.body.forming}).map(function(p){return {ev:p,members:p.body.forming.slice(1)}})}
+function foldOpen(){return {questions:events.filter(function(e){return e.kind==='question.owned'}),wagers:events.filter(function(e){return e.kind==='wager.sealed'}),contests:events.filter(function(e){return e.kind==='contest.filed'})}}
+function foldShare(v){
+  var mine=events.filter(function(e){return e.agent===v&&e.kind==='entry.written'});
+  var cited=0;events.forEach(function(e){(e.body.cites||[]).forEach(function(c){var t=findByAddr(c);if(t&&t.agent===v)cited++})});
+  var o=foldOpen();
+  return {written:mine.length,cited:cited,q:o.questions.filter(function(e){return e.agent===v}).length,w:o.wagers.filter(function(e){return e.agent===v}).length};
+}
+
+/* chrome state */
+var guest=false,lensMode='stream',drafts={main:'',cord:false},scrollPos={},flashChip=null,flashInk=null,frankId=null,firstPaint=true;
+function nameOf(id){return agents[id]?agents[id].name:id}
+function linkNames(s){return s.replace(/\{(\w+)\}/g,function(_,id){return '<span class="mn" data-p="'+id+'">'+nameOf(id)+'</span>'})}
+function threadName(tid){var t=threads.find(function(x){return x.id===tid});return t?t.name:null}
+
+var VIEWS=['journal','people','threads','open','gather','words','share'];
+function currentView(){var h=location.hash.replace('#/','');return VIEWS.indexOf(h)>-1?h:'journal'}
+var prevView=null;
+function go(v){if(currentView()!==v)location.hash='#/'+v;else route()}
+function route(){
+  if(prevView)scrollPos[prevView]=window.scrollY;
+  var v=guest?'journal':currentView();
+  document.querySelectorAll('[data-view]').forEach(function(b){b.setAttribute('aria-current',b.dataset.view===v?'true':'false')});
+  VIEWS.forEach(function(k){document.getElementById('v-'+k).classList.toggle('on',k===v)});
+  renderAll();
+  window.scrollTo(0,scrollPos[v]||0);
+  prevView=v;
+}
+window.addEventListener('hashchange',route);
+document.querySelectorAll('[data-view]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.view)})});
+
+var mode=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+function applyMode(m){mode=m;document.documentElement.setAttribute('data-mode',m);
+  document.querySelector('meta[name=theme-color]').content=(m==='dark'?'#101014':'#F6F4EE');
+  document.getElementById('railMode').textContent=m==='dark'?'light':'dark';
+  document.getElementById('mMode').textContent=m==='dark'?'light':'dark'}
+applyMode(mode);
+['railMode','mMode'].forEach(function(id){document.getElementById(id).addEventListener('click',function(){applyMode(mode==='dark'?'light':'dark')})});
+
+/* pane: three-elevation model; drag-dismiss on mobile */
+var pane=document.getElementById('pane'),paneBody=document.getElementById('paneBody'),paneKick=document.getElementById('paneKick'),scrim=document.getElementById('scrim');
+function openPane(kick,html){
+  paneKick.textContent=kick;paneBody.innerHTML=html;paneBody.scrollTop=0;
+  pane.classList.add('on');scrim.classList.add('on');
+  if(!history.state||!history.state.pane)history.pushState({pane:true},'');
+}
+function closePane(){
+  if(!pane.classList.contains('on'))return;
+  pane.classList.remove('on');scrim.classList.remove('on');pane.style.transform='';
+  if(history.state&&history.state.pane)history.back();
+}
+window.addEventListener('popstate',function(){if(pane.classList.contains('on')){pane.classList.remove('on');scrim.classList.remove('on');pane.style.transform=''}});
+document.getElementById('paneClose').addEventListener('click',closePane);
+scrim.addEventListener('click',closePane);
+(function dragDismiss(){
+  var head=document.getElementById('phead'),startY=null,dy=0,mobile=function(){return matchMedia('(max-width:880px)').matches};
+  head.addEventListener('pointerdown',function(e){if(!mobile())return;startY=e.clientY;dy=0;pane.classList.add('drag');head.setPointerCapture(e.pointerId)});
+  head.addEventListener('pointermove',function(e){if(startY===null)return;dy=Math.max(0,e.clientY-startY);pane.style.transform='translateY('+dy+'px)'});
+  head.addEventListener('pointerup',function(){if(startY===null)return;pane.classList.remove('drag');
+    if(dy>90){closePane()}else{pane.style.transform=''}startY=null});
+})();
+
+/* composer: drafts survive; the cord lives inside */
+function openComposer(opts){
+  opts=opts||{};
+  var isCord=opts.cord||drafts.cord;
+  openPane('the pen',
+    '<h3>'+(isCord?'Say what feels wrong':'Write')+'</h3>'
+    +(opts.threadName?'<div class="std">writing into \u201c'+opts.threadName+'\u201d \u2014 the reader will propose the join; you have the last word</div>':'')
+    +'<textarea class="pen" id="penSheet" placeholder="'+(isCord?'In plain words. It will be carried as a contest \u2014 with your name and standing.':'Write what happened, what you wonder, what you\u2019d bet on.')+'"'+(isCord?' data-cord="1"':'')+'></textarea>'
+    +'<div class="penrow"><span class="stamp">Todd \u00b7 today \u00b7 kept in the record</span>'
+    +'<button class="enter" id="enterSheet">Enter</button></div>'
+    +(isCord?'':'<button class="cordline" id="cordSheet">something is wrong with how we\u2019re working</button>'));
+  var ta=document.getElementById('penSheet');
+  ta.value=opts.prefill!==undefined?opts.prefill:drafts.main;
+  ta.addEventListener('input',function(){drafts.main=ta.value;drafts.cord=isCord});
+  ta.focus();
+  document.getElementById('enterSheet').addEventListener('click',function(){
+    submitEntry(ta.value,ta.dataset.cord==='1');drafts.main='';drafts.cord=false;closePane();
+  });
+  var c=document.getElementById('cordSheet');
+  if(c)c.addEventListener('click',function(){drafts.main=ta.value;openComposer({cord:true,prefill:ta.value})});
+}
+function submitEntry(v,isCord){
+  v=(v||'').trim();if(!v)return;
+  var mentions=[];
+  Object.keys(agents).forEach(function(id){
+    if(id!==VIEWER&&new RegExp('\\b'+agents[id].name+'\\b','i').test(v)){
+      mentions.push(id);v=v.replace(new RegExp('\\b'+agents[id].name+'\\b'),'{'+id+'}');
+    }
+  });
+  var ne=ev(VIEWER,'entry.written',{text:v,type:null,thread:null,mentions:mentions},null,0,'just now');
+  frankId=ne.id;
+  if(currentView()!=='journal')go('journal');else renderAll();
+  setTimeout(function(){
+    var gt=isCord?'contest':(/\?\s*$/.test(v)?'question':(/\b(bet|wager)\b/i.test(v)?'wager':'note'));
+    var gth=/threshold|guest|newcomer/i.test(v)?'threshold':(/measure|trial/i.test(v)?'measure':(/treasury|ledger|patronage/i.test(v)?'treasury':null));
+    var reason=isCord?'entered through the cord \u2014 carried as a contest, with your standing'
+      :'pattern read from the words \u2014 the live reader replaces this stand-in'+(gth?'; \u201c'+threadName(gth)+'\u201d owns words this entry uses':'');
+    stage({type:gt,thread:gth,reason:reason},ne.addr,0);
+    flashChip=ne.id;renderAll();
+  },950);
+}
+document.getElementById('writeBtn').addEventListener('click',function(){openComposer()});
+document.getElementById('penFab').addEventListener('click',function(){openComposer()});
+['railCord','cordInline'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('click',function(){openComposer({cord:true})})});
+(function(){var ta=document.getElementById('penInline');
+  ta.addEventListener('input',function(){drafts.main=ta.value});
+  document.getElementById('enterInline').addEventListener('click',function(){submitEntry(ta.value,false);ta.value='';drafts.main=''});
+})();
+
+/* stream */
+function renderStream(){
+  var el=document.getElementById('stream');
+  if(firstPaint){
+    el.innerHTML='<div class="skel"><div class="w1"></div><div class="w2"></div><div class="w3"></div></div>'.repeat(3);
+    firstPaint=false;setTimeout(renderStream,420);return;
+  }
+  var list=foldEntries(guest),html='',lastDay=null;
+  list.forEach(function(x){
+    var e=x.e,a=x.a,i=e.id;
+    if(lensMode==='days'){
+      var day=e.ago===0?'Today':e.ago===1?'Yesterday':e.when;
+      if(day!==lastDay){
+        var n=list.filter(function(y){var d=y.e.ago===0?'Today':y.e.ago===1?'Yesterday':y.e.when;return d===day}).length;
+        html+='<div class="dayhead">'+day+'<small>'+n+' entr'+(n===1?'y':'ies')+'</small></div>';lastDay=day;
+      }
+    }
+    var chips='';
+    var arriveCls=(flashChip===i?' arrive':'');
+    if(a.st==='thinking')chips='<span class="chip think">reading\u2026</span>';
+    else if(a.st==='proposed'&&!guest)chips='<button class="chip p'+arriveCls+'" data-why="'+i+'"><span style="font-size:8.5px">?</span>'+a.type+'</button>';
+    else chips='<span class="chip c'+(flashInk===i?' inkset':'')+'">'+a.type+'</span>';
+    var th=a.thread&&(a.st==='confirmed'||guest)?'<span class="thlink" data-t="'+a.thread+'">'+threadName(a.thread)+'</span>'
+      :(a.thread&&a.st==='proposed'&&!guest?'<button class="chip p'+arriveCls+'" data-why="'+i+'"><span style="font-size:8.5px">?</span>'+threadName(a.thread)+'</button>':'');
+    var whyBox='';
+    if(a.st==='proposed'&&a.reason&&!guest){
+      whyBox='<div class="why" id="why-'+i+'"><span class="wk">the reader\u2019s reasons \u2014 yours to judge</span>'
+        +'<div>'+a.reason+'</div>'
+        +'<div class="acts"><button class="wbtn yes" data-ok="'+i+'">That\u2019s right</button>'
+        +'<button class="wbtn" data-no="'+i+'">Not quite \u2014 say why</button></div></div>';
+    }
+    html+='<article class="entry'+(frankId===i?' new':'')+'">'
+      +'<button class="addr'+(frankId===i?' franked':'')+'" data-copy="'+e.addr+'" title="Copy address">'+e.addr+'<span class="copied">copied</span></button>'
+      +'<p class="body">'+linkNames(e.body.text)+'</p>'
+      +'<div class="meta"><span class="who"><b>'+nameOf(e.agent)+'</b> \u00b7 '+e.when+'</span>'+chips+th+'</div>'+whyBox+'</article>';
+  });
+  el.innerHTML=html;
+  flashChip=null;flashInk=null;frankId=null;
+}
+document.querySelectorAll('.lbtn').forEach(function(b){
+  b.addEventListener('click',function(){
+    lensMode=b.dataset.lens;
+    document.querySelectorAll('.lbtn').forEach(function(x){x.setAttribute('aria-current',x===b?'true':'false')});
+    renderStream();
+  });
+});
+document.getElementById('stream').addEventListener('click',function(evn){
+  var t=evn.target;
+  var cp=t.closest('[data-copy]');
+  if(cp){if(navigator.clipboard)navigator.clipboard.writeText(cp.dataset.copy);
+    cp.classList.add('did');setTimeout(function(){cp.classList.remove('did')},900);return}
+  var w=t.closest('[data-why]');
+  if(w){var el=document.getElementById('why-'+w.dataset.why);if(el)el.classList.toggle('on');return}
+  var ok=t.closest('[data-ok]');
+  if(ok){var e0=events.find(function(e){return e.id===+ok.dataset.ok});var pr0=stagedFor(e0.addr);
+    ev(VIEWER,'inference.confirmed',{proposal:pr0?pr0.body:null},e0.addr,0);unstage(e0.addr);flashInk=e0.id;renderAll();return}
+  var no=t.closest('[data-no]');
+  if(no){
+    var i=+no.dataset.no,box=document.getElementById('why-'+i);
+    box.innerHTML='<span class="wk">your correction \u2014 kept in the record, and how the reader learns</span>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
+      +TYPES.map(function(ty){return '<button class="wbtn" data-fixtype="'+i+':'+ty+'">'+ty+'</button>'}).join('')+'</div>'
+      +'<textarea class="say" id="fixsay-'+i+'" placeholder="Why? Your reasons teach more than your label."></textarea>'
+      +'<div class="acts"><button class="wbtn yes" data-fixgo="'+i+'">Keep correction</button></div>';
+    box.dataset.pick='';return;
+  }
+  var ft=t.closest('[data-fixtype]');
+  if(ft){var p=ft.dataset.fixtype.split(':');
+    ft.parentElement.querySelectorAll('.wbtn').forEach(function(b){b.classList.remove('yes')});
+    ft.classList.add('yes');document.getElementById('why-'+p[0]).dataset.pick=p[1];return}
+  var fg=t.closest('[data-fixgo]');
+  if(fg){var i2=+fg.dataset.fixgo,box2=document.getElementById('why-'+i2);
+    var e2=events.find(function(e){return e.id===i2});
+    var pick=box2.dataset.pick||latestAssertion(e2).type;
+    var say=(document.getElementById('fixsay-'+i2)||{}).value||'';
+    var pr2=stagedFor(e2.addr);
+    ev(VIEWER,'inference.corrected',{now:pick,was:pr2?pr2.body.type:null,proposal:pr2?pr2.body:null,reason:say||'(no reason given)'},e2.addr,0);
+    unstage(e2.addr);corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;flashInk=i2;renderAll();return}
+  var m=t.closest('.mn');if(m){openPerson(m.dataset.p);return}
+  var tl=t.closest('.thlink');if(tl)openThread(tl.dataset.t);
+});
+
+/* people */
+function renderPeople(){
+  document.getElementById('plist').innerHTML=foldPeople(VIEWER).map(function(r){
+    var how='You named '+(r.agent.id==='jo'?'her':'him')+' in '+r.to+' entr'+(r.to===1?'y':'ies')
+      +(r.from?'; '+(r.agent.id==='jo'?'she':'he')+' named or cited you in '+r.from+'.':'. The weaving runs one way so far.');
+    return '<div class="row" data-person="'+r.agent.id+'"><div class="r1"><span class="dot'+(r.mutual?' f':'')+'"></span>'
+      +'<span class="rn">'+r.agent.name+'</span></div><p class="sub">'+how+'</p></div>';
+  }).join('');
+}
+document.getElementById('plist').addEventListener('click',function(evn){
+  var el=evn.target.closest('[data-person]');if(el)openPerson(el.dataset.person);
+});
+function strands(id){
+  var mine=events.filter(function(e){return e.agent===id&&e.kind==='entry.written'});
+  var kinds={};mine.forEach(function(e){var a=latestAssertion(e);kinds[a.type]=(kinds[a.type]||0)+1});
+  var used=terms.filter(function(t){return mine.some(function(e){return e.body.text.toLowerCase().indexOf(t.t.replace('the ',''))>-1})}).map(function(t){return t.t});
+  var corr=events.filter(function(e){return e.agent===id&&e.kind==='inference.corrected'}).length+(corrTally[id]||0);
+  return [
+    {n:'Language',c:'var(--l)',v:used.length?used:null,d:'The words they reach for in the record'},
+    {n:'Artifacts',c:'var(--a)',v:[mine.length+' entries in the record'],d:'What their hands have touched'},
+    {n:'Methodology',c:'var(--m)',v:Object.keys(kinds).map(function(k){return k+' \u00d7 '+kinds[k]}),d:'The practice kinds they hold'},
+    {n:'Training',c:'var(--t)',v:corr?['gave '+corr+' corrections to the reader']:null,d:'Learning given and received'}
+  ];
+}
+function openPerson(id){
+  if(id===VIEWER){go('share');return}
+  var p=agents[id],rel=foldPeople(VIEWER).find(function(r){return r.agent.id===id});
+  var between=events.filter(function(e){
+    return e.kind==='entry.written'&&((e.agent===VIEWER&&(e.body.mentions||[]).indexOf(id)>-1)||(e.agent===id&&(e.body.mentions||[]).indexOf(VIEWER)>-1));
+  });
+  openPane('person',
+    '<h3>'+p.name+'</h3><div class="std">'+(rel&&rel.mutual?'woven both ways':'woven one way, so far')+'</div>'
+    +'<div class="csect">between you</div>'
+    +between.map(function(e){return '<div class="tent"><p>'+linkNames(e.body.text)+'</p><span class="tw">'+e.addr+' \u00b7 '+nameOf(e.agent)+' \u00b7 '+e.when+'</span></div>'}).join('')
+    +'<div class="csect">as the record holds them</div>'
+    +strands(id).map(function(s){
+      if(!s.v)return '<div class="attr thin" style="--bc:'+s.c+'"><div class="ak"><b>'+s.n+'</b></div><p>Nothing in the record yet \u2014 a blank page, not a blank person.</p></div>';
+      return '<div class="attr" style="--bc:'+s.c+'"><div class="ak"><b>'+s.n+'</b><span>'+s.v.length+'</span></div><p>'+s.d+'.</p>'
+        +'<div class="vals">'+s.v.map(function(x){return '<i>'+x+'</i>'}).join('')+'</div></div>';
+    }).join('')
+    +'<div class="actions"><button class="tbtn go" data-write="'+p.name+'">Write about '+p.name+'</button></div>'
+    +'<div class="fine">This is '+p.name+' as the record holds them \u2014 not as they are. Nothing here is ranked, summed, or compared.</div>');
+}
+
+/* threads */
+function renderThreads(){
+  var html='';
+  threads.forEach(function(t){
+    var f=foldThread(t.id);
+    html+='<div class="row" data-thread="'+t.id+'"><div class="r1"><span class="rn">'+t.name+'</span>'
+      +(f.alive?'<span class="schip a">alive</span>':'<span class="schip d">dormant</span>')
+      +'<span class="last">'+f.last+'</span></div>'
+      +'<p class="sub">'+f.entries.length+' entr'+(f.entries.length===1?'y':'ies')+' \u00b7 '+f.people.map(nameOf).join(', ')+'</p>'
+      +'<div class="mline">named by '+nameOf(t.namedBy)+' \u00b7 dormant is not closed</div></div>';
+  });
+  foldForming().forEach(function(fm,i){
+    html+='<div class="row" data-forming="'+i+'"><div class="r1"><span class="rn prop">something about the '+fm.ev.body.forming[0]+'?</span>'
+      +'<span class="schip f">forming \u00b7 unnamed</span><span class="last">'+fm.ev.when+'</span></div>'
+      +'<p class="sub">The reader thinks '+fm.members.length+' entries are pulling the same direction. Waiting for a member to say so, and name it.</p>'
+      +'<div class="mline">'+fm.ev.body.reason+'</div></div>';
+  });
+  document.getElementById('tlist').innerHTML=html;
+}
+document.getElementById('tlist').addEventListener('click',function(evn){
+  var el=evn.target.closest('[data-thread]');if(el){openThread(el.dataset.thread);return}
+  var f=evn.target.closest('[data-forming]');if(f)openForming(+f.dataset.forming);
+});
+function openThread(tid){
+  var t=threads.find(function(x){return x.id===tid});if(!t)return;
+  var f=foldThread(tid);
+  openPane('thread',
+    '<h3>'+t.name+'</h3><div class="std">kept by members \u00b7 '+(f.alive?'alive':'dormant')+' \u00b7 named by '+nameOf(t.namedBy)+'</div>'
+    +'<div class="csect">the entries, in order</div>'
+    +f.entries.slice().reverse().map(function(x){return '<div class="tent"><p>'+linkNames(x.e.body.text)+'</p><span class="tw">'+x.e.addr+' \u00b7 '+nameOf(x.e.agent)+' \u00b7 '+x.e.when+' \u00b7 '+x.a.type+'</span></div>'}).join('')
+    +(f.questions.length?'<div class="csect">open here</div>'+f.questions.map(function(q){return '<p style="font-size:12.5px">'+q.body.q+' <b style="color:var(--heading)">\u2014 '+q.body.owner+'</b></p>'}).join(''):'')
+    +'<div class="csect">the people in it</div>'
+    +'<div class="attr" style="--bc:var(--line)"><div class="vals">'+f.people.map(function(id){return '<i class="mn" data-p="'+id+'" style="cursor:pointer">'+nameOf(id)+'</i>'}).join('')+'</div></div>'
+    +'<div class="actions"><button class="tbtn go" data-writein="'+t.name+'">Write into this thread</button>'
+    +'<button class="tbtn" data-share-thread="'+t.id+'">Share as a project</button></div>'
+    +'<div class="fine">Entries can live in more than one thread. \u201cShare as a project\u201d offers this body of work into the open world by reference \u2014 the thread\u2019s entries become the project\u2019s provenance.</div>');
+}
+function openForming(i){
+  var fm=foldForming()[i];if(!fm)return;
+  var ents=fm.members.map(findByAddr).filter(Boolean);
+  openPane('forming',
+    '<h3>Is this a thread?</h3><div class="std">staged by the reader · not in the record until you name it</div>'
+    +'<div class="inf"><span class="wk">its evidence</span>'+fm.ev.body.reason+'</div>'
+    +ents.map(function(e){return '<div class="tent"><p>'+linkNames(e.body.text)+'</p><span class="tw">'+e.addr+' \u00b7 '+nameOf(e.agent)+' \u00b7 '+e.when+'</span></div>'}).join('')
+    +'<p>If it is real, it needs a member\u2019s name for it \u2014 in the members\u2019 own words, not the reader\u2019s.</p>'
+    +'<div class="actions"><input class="ninput" id="tname" placeholder="name it, if it\u2019s real">'
+    +'<button class="tbtn go" data-namethread="'+i+'">Keep &amp; name</button>'
+    +'<button class="tbtn" data-notthread="'+i+'">Not a thread</button></div>'
+    +'<div class="fine">Either answer is kept in the record: a naming makes the thread real; a refusal teaches the reader, under your name.</div>');
+}
+
+/* the open */
+function renderOpen(){
+  var o=foldOpen(),html='';
+  document.getElementById('openCnt').textContent=o.questions.length+o.wagers.length+o.contests.length;
+  html+='<div class="sect">open questions, with owners</div>';
+  o.questions.forEach(function(q){
+    html+='<div class="row"><div class="r1"><span class="schip q">question</span><span class="rn">'+q.body.q+'</span><span class="last">'+q.when+'</span></div>'
+      +'<p class="sub">Owner: '+q.body.owner+'.'+(q.body.thread?' Lives in '+threadName(q.body.thread)+'.':'')+'</p></div>';
+  });
+  html+='<div class="sect">open wagers, terms sealed at entry</div>';
+  o.wagers.forEach(function(w){
+    html+='<div class="row"><div class="r1"><span class="schip w">wager</span><span class="rn">'+w.body.terms+'</span><span class="last">resolves '+w.body.resolves+'</span></div>'
+      +'<p class="sub">'+nameOf(w.agent)+' and '+nameOf(w.body.counterparty)+', counterparties.</p><div class="mline">'+w.body.hash+' \u00b7 results enter either way</div></div>';
+  });
+  html+='<div class="sect">contests, before the room</div>';
+  o.contests.forEach(function(c){
+    var src=findByAddr(c.about);
+    html+='<div class="row"><div class="r1"><span class="schip x">contest</span><span class="rn">'+(src?src.body.text.slice(0,64):c.body.what)+'\u2026</span><span class="last">'+c.body.carried+'</span></div>'
+      +'<p class="sub">'+nameOf(c.agent)+', contesting '+c.body.what+' \u2014 a member\u2019s standing to interrupt, not a complaint.</p></div>';
+  });
+  document.getElementById('openlist').innerHTML=html;
+}
+
+/* gatherings */
+function renderGather(){
+  var html='<div class="sect">coming</div>';
+  html+='<div class="row" data-g="next"><div class="r1"><span class="rn">Wednesday close \u00b7 week 36</span><span class="last">Sep 2</span></div>'
+    +'<p class="sub">Standing C-activity. Carried to it: '+foldOpen().contests.length+' contest, the cadence question, this week\u2019s rereadings offered by consent.</p></div>';
+  html+='<div class="row"><div class="r1"><span class="rn">Daybook demo \u00b7 shown running, unfinished</span><span class="last">Sep 12</span></div>'
+    +'<p class="sub">Promises entered before; status entered after. Judged as work, not persons.</p></div>';
+  html+='<div class="sect">held, and what each left in the record</div>';
+  events.filter(function(e){return e.kind==='gathering.held'}).forEach(function(g){
+    html+='<div class="row"><div class="r1"><span class="rn">'+g.body.what+'</span><span class="last">'+g.when+'</span></div>'
+      +'<p class="sub">Left: '+g.body.left+'</p><div class="mline">'+g.addr+'</div></div>';
+  });
+  events.filter(function(e){return e.kind==='demo.reported'}).forEach(function(d){
+    var pr=findByAddr(d.about);
+    html+='<div class="row"><div class="r1"><span class="rn">'+(pr?pr.body.what:'demo')+' \u00b7 held</span><span class="last">'+d.when+'</span></div>'
+      +'<p class="sub">'+d.body.status+' \u2014 the promise stays auditable after the applause.</p><div class="mline">promised '+(pr?pr.addr:'')+' \u00b7 reported '+d.addr+'</div></div>';
+  });
+  document.getElementById('glist').innerHTML=html;
+}
+document.getElementById('glist').addEventListener('click',function(evn){
+  if(!evn.target.closest('[data-g="next"]'))return;
+  openPane('gathering',
+    '<h3>Wednesday close \u00b7 week 36</h3><div class="std">Sep 2 \u00b7 the room</div>'
+    +'<p>The improvement of improving, given a date and a room. Carried to it by the record: Kevin\u2019s contest of the trial measure; the cadence question; and peer rereading \u2014 members reviewing one another\u2019s entries and the reader\u2019s inferences \u2014 offered here by explicit consent, never ambient in the app.</p>');
+});
+
+/* words */
+function renderWords(){
+  var html='<div class="sect">shared, in many voices</div><div class="wgrid">';
+  terms.filter(function(t){return t.voices>2&&!t.fresh}).forEach(function(t){html+='<span class="word" data-word="'+t.t+'" role="button" tabindex="0">'+t.t+'<small>'+t.uses+' uses \u00b7 '+t.voices+' voices</small></span>'});
+  html+='</div><div class="sect">one voice, not yet shared</div><div class="wgrid">';
+  terms.filter(function(t){return t.one}).forEach(function(t){html+='<span class="word one" data-word="'+t.t+'" role="button" tabindex="0">'+t.t+'<small>'+t.one+' \u00b7 '+t.uses+'</small></span>'});
+  html+='</div><div class="sect">new, and spreading</div><div class="wgrid">';
+  terms.filter(function(t){return t.fresh}).forEach(function(t){html+='<span class="word new" data-word="'+t.t+'" role="button" tabindex="0">'+t.t+'<small>'+t.fresh+'</small></span>'});
+  html+='</div>';
+  document.getElementById('wlist').innerHTML=html;
+}
+document.getElementById('wlist').addEventListener('click',function(evn){
+  var el=evn.target.closest('[data-word]');if(!el)return;
+  var t=terms.find(function(x){return x.t===el.dataset.word});
+  var users=events.filter(function(e){return e.kind==='entry.written'&&e.body.text.toLowerCase().indexOf(t.t.replace('the ',''))>-1});
+  openPane('word',
+    '<h3>\u201c'+t.t+'\u201d</h3><div class="std">'+t.uses+' uses \u00b7 '+t.voices+' voice'+(t.voices===1?'':'s')+(t.one?' \u00b7 so far only '+t.one+'\u2019s':'')+'</div>'
+    +(users.length?'<div class="csect">where it lives, lately</div>'+users.slice(0,3).map(function(e){return '<div class="tent"><p>'+linkNames(e.body.text)+'</p><span class="tw">'+e.addr+' \u00b7 '+nameOf(e.agent)+'</span></div>'}).join(''):'')
+    +'<p class="fine">A word joins the lexicon by use, not decree. When the reader leans on this term to classify, that lean is inspectable here \u2014 the dictionary is the members\u2019, on loan to the machine.</p>');
+});
+
+/* share */
+function renderShare(){
+  var s=foldShare(VIEWER);
+  document.getElementById('shlist').innerHTML=
+    '<div class="sh"><div class="k">written</div><div class="v"><b>'+s.written+' entries</b> in the record \u00b7 each with its permanent address</div></div>'
+    +'<div class="sh"><div class="k">cited by others</div><div class="v"><b>'+s.cited+' time'+(s.cited===1?'':'s')+'</b> \u00b7 citation that bears weight, because addresses never move</div></div>'
+    +'<div class="sh"><div class="k">holding open</div><div class="v"><b>'+s.q+' question'+(s.q===1?'':'s')+'</b> owned \u00b7 <b>'+s.w+' wager'+(s.w===1?'':'s')+'</b> sealed \u00b7 resolution is an entry, with warrant</div></div>'
+    +'<div class="sh"><div class="k">patronage</div><div class="v"><b>Your standing, as the treasury\u2019s fold renders it</b> \u00b7 computed from your own acts and never comparative</div></div>';
+}
+
+/* reread */
+function openReread(){
+  var mine=foldEntries(false).filter(function(x){return x.e.agent===VIEWER}).slice(0,3),idx=0;
+  ev(VIEWER,'rereading.held',{count:mine.length},null,0);
+  function step(){
+    if(idx>=mine.length){
+      var dist=Object.keys(corrTally).sort(function(a,b){return corrTally[b]-corrTally[a]}).map(function(id){return nameOf(id)+' ('+corrTally[id]+')'}).join(' \u00b7 ');
+      openPane('rereading',
+        '<h3>Rereading done.</h3><p>'+mine.length+' entries reread. What you confirmed and corrected is kept in the record with your name \u2014 it is how the reader learns to read the way this co-op thinks, and rereading your own words is how you notice what you actually meant. Both learners, one gesture.</p>'
+        +'<p class="fine">The reader\u2019s judgment is trained on corrections from: '+dist+' \u2014 said plainly, so the members can see whose way of seeing it is learning.</p>');
+      return;
+    }
+    var x=mine[idx],a=x.a;
+    openPane('rereading',
+      '<h3>Rereading</h3><div class="std">your recent entries \u00b7 '+(idx+1)+' of '+mine.length+' \u00b7 a few minutes, when you choose</div>'
+      +'<div class="prog">'+mine.map(function(_,i){return '<span class="'+(i<idx?'done':'')+'"></span>'}).join('')+'</div>'
+      +'<div class="rbody">'+x.e.body.text.replace(/\{(\w+)\}/g,function(_,id){return nameOf(id)})+'</div>'
+      +'<div class="inf"><span class="wk">what the reader made of it</span>a <b>'+a.type+'</b>'+(a.thread?' in <b>'+threadName(a.thread)+'</b>':', in no thread')+'.'+(a.reason?' because: '+a.reason:'')+'</div>'
+      +'<p style="font-size:13px">Reading it again \u2014 what was this, really? What does it connect to?</p>'
+      +'<textarea class="say" id="rrsay" placeholder="In your own words. Your reasons are the part that teaches \u2014 the reader, and you."></textarea>'
+      +'<div class="actions"><button class="tbtn go" id="rrK">The reader had it right</button>'
+      +'<button class="tbtn" id="rrF">Keep my reading instead</button></div>'
+      +'<div class="fine">Skipping is fine and costs nothing. Corrections teach far more than agreements \u2014 and the reader is never allowed to make agreeing easier than being right.</div>');
+    document.getElementById('rrK').addEventListener('click',function(){var prr=stagedFor(x.e.addr);ev(VIEWER,'inference.confirmed',{via:'rereading',proposal:prr?prr.body:null},x.e.addr,0);unstage(x.e.addr);idx++;step()});
+    document.getElementById('rrF').addEventListener('click',function(){
+      var say=document.getElementById('rrsay').value;
+      var prf=stagedFor(x.e.addr);
+      ev(VIEWER,'inference.corrected',{reason:say||'(no reason given)',via:'rereading',proposal:prf?prf.body:null},x.e.addr,0);
+      unstage(x.e.addr);
+      corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;idx++;step();
+    });
+  }
+  step();
+}
+document.getElementById('railReread').addEventListener('click',openReread);
+
+/* method + log */
+function openMethod(){
+  openPane('the method',
+    '<h3>The method</h3>'
+    +'<p>One journal, seven readings. Everything enters through the pen; nothing is ever edited or erased \u2014 corrections are added alongside, so the record can testify. A background reader proposes types and threads with its reasons shown. Dashed means staged by the reader and not in the record at all; solid means a member decided and it is \u2014 and the type itself tells you who is speaking: the human voice is set in serif, the record\u2019s grammar in the machine hand.</p>'
+    +'<p>Relationships come from writing. Threads are born named by members, and a mature thread can be shared into the open world as a project \u2014 by reference, its entries becoming the project\u2019s provenance. The Open holds what the record owes the future. Gatherings keep the room and the demo honest. Words is the language forming, and the reader\u2019s dictionary, inspectable. Your Share is a reading of your own acts, never a scoreboard and never comparative.</p>'
+    +'<p>The cord \u2014 \u201csomething is wrong with how we\u2019re working\u201d \u2014 lives inside the pen and at the rail\u2019s foot: your standing to contest lives inside your standing to write.</p>'
+    +'<p class="fine">The reader is not an agent row and writes nothing: it stages proposals to you, and your act is what enters the record. Not built, deliberately: no feed, no notifications, no progress tracking, no admin panel. The full documents govern: The Second Generation, the schema, and The Reader\u2019s Instructions.</p>'
+    +'<div class="actions"><button class="tbtn">Open the register</button><button class="tbtn" data-showlog>See the record itself</button></div>');
+}
+function showLog(){
+  openPane('the record itself',
+    '<h3>The record itself</h3><div class="std">the one growing table \u00b7 appended, never edited \u00b7 every view is a fold over this</div>'
+    +events.slice().reverse().slice(0,30).map(function(e){
+      return '<div class="logrow"><span class="la">'+e.addr+'</span><span class="lk">'+e.kind+'</span><span class="lb">'+nameOf(e.agent)+' \u00b7 '+(e.about?'about '+e.about+' \u00b7 ':'')+(e.body.text||e.body.reason||e.body.terms||e.body.what||e.body.q||JSON.stringify(e.body)).slice(0,72)+'</span></div>';
+    }).join('')
+    +'<div class="fine" style="margin-top:12px">Every row here was written by a member. The reader\u2019s proposals are not in this table at all \u2014 they are staged, and enter only as provenance inside the confirmation or correction a member makes of them. The chain of about-addresses is how any state on any screen traces back to acts.</div>');
+}
+document.getElementById('railMethod').addEventListener('click',openMethod);
+document.getElementById('railLog').addEventListener('click',showLog);
+
+/* more (mobile) */
+document.getElementById('moreBtn').addEventListener('click',function(){
+  openPane('more',
+    '<div class="morelist">'
+    +'<button class="rbtn" data-more="people">People</button>'
+    +'<button class="rbtn" data-more="gather">Gatherings</button>'
+    +'<button class="rbtn" data-more="words">Words</button>'
+    +'<button class="rbtn" data-more="share">Your Share</button>'
+    +'<button class="rbtn" data-more-act="reread" style="color:var(--ember-text)">Rereading</button>'
+    +'<button class="rbtn" data-more-act="method">The method</button>'
+    +'<button class="rbtn" data-more-act="log">The record itself</button>'
+    +'<button class="rbtn" data-more-act="guest">View as guest</button>'
+    +'</div>'
+    +'<p style="margin:12px 10px 0;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Demonstration seed — every entry below is invented; the names are real members, the writing is not theirs. Public beta, unadopted and undeployed: everything lives in memory and is gone on reload. The reader is a word-pattern stand-in for the live one.</p>');
+});
+
+/* guest */
+function enterGuest(){guest=true;document.body.classList.add('guest');lensMode='stream';location.hash='#/journal';route()}
+function leaveGuestFn(){guest=false;document.body.classList.remove('guest');route()}
+document.getElementById('railGuest').addEventListener('click',enterGuest);
+document.getElementById('leaveGuest').addEventListener('click',leaveGuestFn);
+
+/* cord */
+document.getElementById('railCord');
+
+/* pane delegation */
+paneBody.addEventListener('click',function(evn){
+  var t=evn.target;
+  if(t.closest('[data-showlog]')){showLog();return}
+  var mo=t.closest('[data-more]');if(mo){closePane();setTimeout(function(){go(mo.dataset.more)},60);return}
+  var ma=t.closest('[data-more-act]');
+  if(ma){closePane();
+    if(ma.dataset.moreAct==='reread')setTimeout(openReread,120);
+    if(ma.dataset.moreAct==='method')setTimeout(openMethod,120);
+    if(ma.dataset.moreAct==='log')setTimeout(showLog,120);
+    if(ma.dataset.moreAct==='guest')enterGuest();
+    return}
+  var m=t.closest('.mn');if(m&&m.dataset.p){openPerson(m.dataset.p);return}
+  var w=t.closest('[data-write]');
+  if(w){closePane();setTimeout(function(){openComposer({prefill:w.dataset.write+' '})},120);return}
+  var wi=t.closest('[data-writein]');
+  if(wi){closePane();setTimeout(function(){openComposer({threadName:wi.dataset.writein,prefill:''})},120);return}
+  var st=t.closest('[data-share-thread]');
+  if(st){openPane('stop card',
+    '<h3>Share as a project</h3><p>This offers the thread into the open world as a project \u2014 the Triad\u2019s open entry, by reference: the project record points at the thread, and its entries become the project\u2019s provenance. Any participant may share a project; venture and program stay steward readings.</p>'
+    +'<p class="fine">In this beta the offer stops here \u2014 the project record lives in the CIS, and what this door may create there is governed by the authority map. A capability the map does not ground is a stop card, not a feature.</p>');return}
+  var nt=t.closest('[data-namethread]');
+  if(nt){
+    var nameEl=document.getElementById('tname'),nm=(nameEl&&nameEl.value.trim())||'';
+    if(!nm){if(nameEl)nameEl.focus();return}
+    var fm=foldForming()[+nt.dataset.namethread];
+    var id='t'+(threads.length+1);
+    threads.push({id:id,name:nm,namedBy:VIEWER});
+    ev(VIEWER,'thread.named',{thread:id,name:nm,proposal:fm.ev.body},fm.members[0]||null,0);
+    fm.members.forEach(function(addr){
+      var src=findByAddr(addr);
+      ev(VIEWER,'thread.joined',{thread:id},addr,0);
+      if(src&&src.kind==='entry.written'){src.body.thread=id;ev(VIEWER,'inference.confirmed',{},addr,0)}
+    });
+    staged=staged.filter(function(p){return p.sid!==fm.ev.sid});
+    closePane();renderAll();return}
+  var xt=t.closest('[data-notthread]');
+  if(xt){
+    var fm2=foldForming()[+xt.dataset.notthread];
+    ev(VIEWER,'inference.corrected',{reason:'not a thread',via:'forming refusal',proposal:fm2.ev.body},fm2.members[0]||null,0);
+    corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;
+    staged=staged.filter(function(p){return p.sid!==fm2.ev.sid});
+    closePane();renderAll();return}
+});
+
+/* keys */
+document.addEventListener('keydown',function(evn){
+  var tag=document.activeElement&&document.activeElement.tagName;
+  if(tag==='TEXTAREA'||tag==='INPUT'){if(evn.key==='Escape')document.activeElement.blur();return}
+  if(evn.key==='Escape'){closePane();return}
+  if(guest)return;
+  var cur=VIEWS.indexOf(currentView());
+  if(evn.key.toLowerCase()==='a')go(VIEWS[(cur+VIEWS.length-1)%VIEWS.length]);
+  if(evn.key.toLowerCase()==='d')go(VIEWS[(cur+1)%VIEWS.length]);
+  if(evn.key.toLowerCase()==='n'){evn.preventDefault();openComposer()}
+});
+
+function renderAll(){renderStream();renderPeople();renderThreads();renderOpen();renderGather();renderWords();renderShare()}
+if(!location.hash)location.hash='#/journal';
+route();
+
+/* first-visit tutorial */
+var pages=[
+  {h:'This is a shared journal.',p:'Everyone writes into one record. Nothing is ever edited or erased \u2014 corrections are added alongside, so the record can be trusted to testify later. You just write; the structure comes to you. The pen is always one tap away.'},
+  {h:'A reader sorts, and you have the last word.',p:'After you enter something, a background reader proposes what it was and which conversation it continues, with its reasons shown. Dashed means staged by the reader and not in the record at all; solid means a member decided and it is \u2014 and the lettering tells you who is speaking: your words in the book hand, the record\u2019s grammar in the machine hand. Corrections are how it learns to read the way this co-op thinks.'},
+  {h:'Seven readings, and a line that is yours.',p:'Threads and The Open sit beside the Journal; the rest are one tap deeper. All of them are the same journal, read for different things. And inside the pen you will always find one quiet line \u2014 \u201csomething is wrong with how we\u2019re working\u201d \u2014 your standing to contest, carried into the same record under your name.'}
+];
+var pg=0;
+function tutStep(){
+  openPane('how this works \u00b7 '+(pg+1)+' of '+pages.length,
+    '<h3>'+pages[pg].h+'</h3><p>'+pages[pg].p+'</p>'
+    +'<div class="actions">'
+    +(pg>0?'<button class="tbtn" id="tB">Back</button>':'')
+    +(pg<pages.length-1?'<button class="tbtn go" id="tN">Next</button>':'<button class="tbtn go" id="tD">Open the journal</button>')
+    +'</div>');
+  var n=document.getElementById('tN'),b=document.getElementById('tB'),d=document.getElementById('tD');
+  if(n)n.addEventListener('click',function(){pg++;tutStep()});
+  if(b)b.addEventListener('click',function(){pg--;tutStep()});
+  if(d)d.addEventListener('click',closePane);
+}
+tutStep();
+})();
+</script>
+</body>
+</html>
