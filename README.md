@@ -32,7 +32,11 @@ The steward's stated near-term goal for this work is a **public beta of the Dayb
 
 **It is Draft v0, unadopted, for the Wednesday room.** The PRD says so on its own face and this repository does not upgrade it. Plans against it are ordered by systems dependency and never by time estimate, per the steward's direction: [`docs/DAYBOOK_DEPENDENCY_ORDER.md`](docs/DAYBOOK_DEPENDENCY_ORDER.md).
 
-The PRD names four companion artifacts as governing behavior — the prototype `daybook-beta-v2.html` (canonical), `DAYBOOK_BETA.md`, `READERS_INSTRUCTIONS.md`, and schema v0. **None are in this repository yet**, so behavior is underspecified and building against the PRD alone would be invention. That is the first dependency, and it is the steward's to clear.
+The PRD names four companion artifacts as governing behavior — the prototype (canonical), `DAYBOOK_BETA.md`, `READERS_INSTRUCTIONS.md`, and schema v0. The prototype is here: [`prototypes/daybook-beta-v3.html`](prototypes/daybook-beta-v3.html), delivered 2026-08-31 (sha256 `48063b7e…c13af`). It is a single self-contained page that reads and writes nothing — no `fetch`, no `localStorage`, no database client — and it carries the seven readings, the pen, the reader stand-in, Rereading, the Method page, the raw-record inspector, the guest view, and the cord. The PRD header still names `daybook-beta-v2.html`; the delivered file is **v3** and, being canonical for behavior, wins.
+
+**The remaining three are not here** — `DAYBOOK_BETA.md`, `READERS_INSTRUCTIONS.md`, schema v0 — so the reader's governance and the event shape are still underspecified, and those are the steward's to clear.
+
+The prototype's seed data uses real members' first names against invented entries. Harmless in memory; not harmless if this page is ever served where a reader could take it for the record. See the flag in the dependency document.
 
 Note also that `techne.coop/daybook/` already publishes a *book* of that name — the launch weekend, verbatim, binding nothing. The instrument in this PRD shares its name and lineage and is a different object; which of the two the app is a door onto is an open question in the dependency document.
 

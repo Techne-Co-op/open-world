@@ -19,13 +19,19 @@ Everything below depends on documents this repository does not yet hold. The PRD
 
 | Artifact | Role per the PRD | In this repo |
 |---|---|---|
-| `daybook-beta-v2.html` | reference implementation; **canonical for behavior** | no |
+| the prototype | reference implementation; **canonical for behavior** | **yes** — `prototypes/daybook-beta-v3.html` |
 | `DAYBOOK_BETA.md` | the specification | no |
 | `READERS_INSTRUCTIONS.md` | agent governance for the machine-class reader | no |
 | schema v0 | the event shape | no |
 | *The Second Generation* | the method register | no |
 
-`DAYBOOK_PRD.md` (this repo, verbatim as delivered, sha256 `b3bef074…c1339`) is the first. Until the prototype and `DAYBOOK_BETA.md` land, behavior is underspecified and any build here would be invention rather than implementation. **This layer blocks every other layer** and is resolved only by the steward delivering the remaining artifacts.
+`DAYBOOK_PRD.md` (this repo, verbatim as delivered, sha256 `b3bef074…c1339`) is the first artifact. The second is the prototype, delivered 2026-08-31 (sha256 `48063b7e…c13af`).
+
+**Version note.** The PRD's header names `daybook-beta-v2.html` as the reference implementation. What was delivered is **v3**, described by the steward as updated from v2. The prototype is canonical for behavior, so where the two disagree the file wins and the PRD header is stale by one version. That is recorded, not corrected: the PRD is held verbatim as delivered.
+
+**What the prototype settles.** Read at the delivered file, it is a single self-contained page, 1,057 lines, no `fetch`, no `XMLHttpRequest`, no `localStorage`, no Supabase client — in-memory exactly as PRD §5 Out says. It carries the seven views as hash routes (`journal`, `people`, `threads`, `open`, `gather`, `words`, `share`), the A/D walk over them, the left rail tiered as §5 describes (daily / the readings / yours / a system foot), the Rereading room, the Method page, the raw-record inspector, a guest-view toggle, and the cord. Event kinds visible in the seed include `entry.written`, `inference.proposed`, `inference.confirmed`, and `question.owned`. So layers 2 through 4 now have a behavioral reference and are buildable; **only `DAYBOOK_BETA.md`, `READERS_INSTRUCTIONS.md` and schema v0 remain outstanding at this layer.**
+
+**One flag under AGENTS.md MARK.** The prototype's seed data uses the first names of real members of the cooperative — Todd, Aaron, Kevin, Lucien, Jo — attached to invented entries, wagers, and disagreements. In an in-memory prototype that writes nowhere this is harmless, and it is illustrative in the way a walkthrough wants. It stops being harmless the moment this page is served anywhere a reader could mistake it for the record. Before layer 7, either the seed is relabelled on its face or the names are changed.
 
 ## Layer 1 · The authority map's reading of the Daybook
 
