@@ -1,6 +1,6 @@
 # Daybook · decisions
 
-Decisions taken on the Daybook documents, each with who took it, when, and where it was said. The delivered artifacts — the PRD, the specification, the reader's instructions, the prototype, and the schema companion — are held verbatim in this repository and are not edited to match. This file is where a decision gets an address; the next revision of each artifact carries it.
+Decisions taken on the Daybook documents, each with who took it, when, and where it was said. The delivered artifacts — the PRD, the specification, the reader's instructions, the prototype, and the schema companion — are held verbatim in this repository by default, and a decision that would edit one says so and names the edit. This file is where a decision gets an address; otherwise the next revision of each artifact carries it.
 
 Nothing here adopts anything. Adoption of the instruments these decisions touch remains the members' and the board's.
 
