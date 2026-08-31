@@ -22,7 +22,7 @@ Everything below depends on documents this repository does not yet hold. The PRD
 | the prototype | reference implementation; **canonical for behavior** | **yes** — `prototypes/daybook-beta-v3.html` |
 | `DAYBOOK_BETA.md` | the specification | **yes** — `docs/DAYBOOK_BETA.md` |
 | schema v0 | the event shape | **yes** — it is `DAYBOOK_BETA.md` §3, unchanged since v0 |
-| `READERS_INSTRUCTIONS.md` | agent governance for the machine-class reader | no |
+| `READERS_INSTRUCTIONS.md` | agent governance for the machine-class reader | **yes** — `docs/READERS_INSTRUCTIONS.md` |
 | *The Second Generation* | the method register | no (method-history, not behavior) |
 
 `DAYBOOK_PRD.md` (this repo, verbatim as delivered, sha256 `b3bef074…c1339`) is the first artifact. The second is the prototype, delivered 2026-08-31 (sha256 `48063b7e…c13af`).
@@ -33,7 +33,18 @@ Everything below depends on documents this repository does not yet hold. The PRD
 
 **What the specification settles.** `DAYBOOK_BETA.md` (beta v3, delivered 2026-08-31, sha256 `5f4c50c7…1a8ed`) carries the schema in §3 — so *schema v0 is not a missing artifact; it is that section, and the spec says it is unchanged since v0*. It gives five tables (`agents`, `events`, `edges`, `threads`, `terms`), a closed list of nineteen event kinds, an explicit **deliberately-not-tables** list, each of the seven readings written as a fold in §4, and a design system in §5 whose one load-bearing rule is semantic: **serif is the human voice, mono is the record's grammar.** Spot-checked against the prototype and consistent: `Libre Baskerville` and `IBM Plex Mono` both present, `prefers-reduced-motion` honored, `setPointerCapture` for drag-dismiss, a skeleton state, and an inline web-app manifest.
 
-**With this, layers 2 through 6 are specified.** The remaining layer-0 gap is `READERS_INSTRUCTIONS.md` alone, which governs the reader — so layer 5's live model call is still the only step lacking its governing document.
+**With this, layers 2 through 6 are specified.**
+
+**What the reader's instructions settle — layer 0 is closed.** `READERS_INSTRUCTIONS.md` (v3, delivered 2026-08-31, sha256 `7c3ba8dd…c8813`) governs layer 5. Eight journeys, each closing with a verbatim instruction, plus a gathered refusals list. The charter is the load-bearing part: the reader is a row of machine class holding **exactly one power, to propose**, and the staging function is a membrane where a machine proposal becomes a member act or becomes nothing. J6 is the hard boundary — emit only `{kind ∈ inference.*}`, commit authority is a member act validated by `visible(agent, record)`, and any needed capability outside `inference.*` is a halt with the stop card surfaced, explicitly with **no retries and no reformulations to fit through**. J8, new in v3, ties presentation to the spec's type rule: the reader's output is always in the record's hand, never the human voice, and the animation that marks a proposal becoming a decision belongs to the member's act, not the reader's arrival.
+
+Every remaining artifact named across the three documents is now here except *The Second Generation*, which is method-history rather than behavior. **Nothing at layer 0 blocks a build.**
+
+### Two crossings found on the delivered set, reported and not resolved
+
+Checked across the three documents and the prototype at their delivered hashes.
+
+1. **`thread.forming` and `disagreement.noted` are outside the reader's own boundary.** J3 instructs the reader to stage `thread.forming {member_addrs[], evidence[]}` and J5 to stage `disagreement.noted {readings[], carried:close}`. Neither kind appears in `DAYBOOK_BETA.md` §3's nineteen event kinds, neither appears in the prototype, and neither is an `inference.*` kind — so J6's instruction, read literally, forbids both. Three readings are available and the choice is not this repository's: the two kinds are missing from §3 and should be added; or they are `inference.*` kinds under working names and should be renamed; or J6 is the narrower rule and J3 and J5 are loose. Until it is settled, a builder implementing J3 or J5 must violate J6 to do it.
+2. **Entry types are six, and the seed shows five.** The prototype's vocabulary is `note · question · wager · demo · close · contest`, matching J1's "a type from the six kinds". The seeded rows exercise five; `demo` is unused. Not a defect — noted so the gap is not mistaken for one later.
 
 **One correction to layer 1, from §7.** The spec is more specific than the PRD: the `agents` table takes a **class** column with the value `machine`, and *the reader is a row there, not an exception*. That is precise enough to name the ask exactly. It is a CIS schema addition and a new RLS policy — restricting one agent class to writing only the four inference kinds — and this repository changes no schema (AGENTS.md STOP). The stop card is therefore: **does the authority map ground a machine class of agent, and if not, what grounds it?** Filed against the estate, not decided here. Everything the spec claims about "the member has the last word" being a database constraint rather than a UI promise depends on that answer.
 

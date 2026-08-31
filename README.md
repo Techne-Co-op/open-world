@@ -36,7 +36,9 @@ The PRD names four companion artifacts as governing behavior — the prototype (
 
 The specification is here too: [`docs/DAYBOOK_BETA.md`](docs/DAYBOOK_BETA.md), beta v3, delivered 2026-08-31 (sha256 `5f4c50c7…1a8ed`). Its §3 **is** the schema — five tables, nineteen event kinds, an explicit list of what is deliberately not a table — so "schema v0" was never a separate missing document. Its §5 adds the design system, whose one load-bearing rule is semantic rather than decorative: *the serif is the human voice, the mono is the record's grammar.*
 
-**One artifact remains outstanding** — `READERS_INSTRUCTIONS.md` — so the reader's governance is still unspecified, and that is the steward's to clear.
+And the reader's governance: [`docs/READERS_INSTRUCTIONS.md`](docs/READERS_INSTRUCTIONS.md), v3, delivered 2026-08-31 (sha256 `7c3ba8dd…c8813`). Eight journeys, each closing with its instruction verbatim, and a gathered list of refusals. The reader holds **exactly one power, to propose**; the staging function is the membrane where a machine proposal becomes a member act or becomes nothing; any capability outside `inference.*` is a halt with the stop card surfaced, with no retries and no reformulations to fit through.
+
+**The artifact set is complete** apart from *The Second Generation*, which is method-history rather than behavior. Two crossings were found on the delivered set and are reported in the dependency document rather than resolved here — the largest being that the reader is instructed to stage two event kinds (`thread.forming`, `disagreement.noted`) that appear in neither the schema nor its own `inference.*` boundary.
 
 The prototype's seed data uses real members' first names against invented entries. Harmless in memory; not harmless if this page is ever served where a reader could take it for the record. See the flag in the dependency document.
 
@@ -46,6 +48,7 @@ Note also that `techne.coop/daybook/` already publishes a *book* of that name �
 
 - [`docs/DAYBOOK_PRD.md`](docs/DAYBOOK_PRD.md) — the Daybook public-beta PRD, as delivered by the steward
 - [`docs/DAYBOOK_BETA.md`](docs/DAYBOOK_BETA.md) — the Daybook beta v3 specification, including the schema (§3)
+- [`docs/READERS_INSTRUCTIONS.md`](docs/READERS_INSTRUCTIONS.md) — governance of the machine-class reader, in journeys
 - [`docs/DAYBOOK_DEPENDENCY_ORDER.md`](docs/DAYBOOK_DEPENDENCY_ORDER.md) — the Daybook build order, by systems dependency
 - [`docs/JOURNEYS_AND_STORIES.md`](docs/JOURNEYS_AND_STORIES.md) — critical member and steward journeys and stories
 - [`docs/STEWARD_PERSONA.md`](docs/STEWARD_PERSONA.md) — the steward persona and its permissions set, intersected with the authority map
