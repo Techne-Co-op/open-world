@@ -98,3 +98,25 @@ Open ledger item 12 closes.
 **C stands where it was.** The Rereading room already discloses the correction distribution at every close, which is aggregate disclosure and needs no decision.
 
 Open ledger item 11 narrows to B and leaves this repository.
+
+---
+
+## D-05 · D-01 applied to the artifacts
+
+**Instructed by** Todd Youngblood, 2026-08-31, in `#open-world` (`87076c3549e4fc6c51b04393d6f53a294f6c7062e04407471d286c6cf326054c`): *Please apply D-01 to the artifacts now.*
+
+D-01 recorded its changes and deferred them to a next revision. D-02 and D-04 then edited artifacts directly, which left the false sentences standing while smaller ones were fixed. That inconsistency sat on the load-bearing claims, so it is closed here. The verbatim hold is released across the four artifacts for D-01's changes; the delivered hashes remain the record of what arrived.
+
+**`docs/DAYBOOK_BETA.md`** — `agents` loses `class` and the reader loses its row, with the authority map §3 cited for where class actually lives. `inference.proposed` leaves the event-kind list, eighteen remain. `body` now states that a correction carries the proposal it rejected. The `about_event_id` chain drops its inference leg. §6's dashed/solid rule now reads *staged and not in the record at all* against *decided and it is*. §7's row-level-security paragraph is rewritten: the reader writes nothing, and the member's last word is not a fence around a machine writer.
+
+**`docs/DAYBOOK_PRD.md`** — the reader's persona row and principle 3 rewritten to match.
+
+**`docs/READERS_INSTRUCTIONS.md`** — §Powers: the reader is not a row and holds no grant. J1 stages a proposal that is not an event and has no kind. The stop-card story no longer says *only inference kinds pass*, because nothing of the reader's passes. The curriculum story carries the D-04 narrowing and the rejected proposal.
+
+**`prototypes/daybook-beta-v3.html`** — the engine, not only the prose. The reader is no longer an agent row. A `staged` store sits beside `events` with no agent, no kind, no address, and a free drop. Seeded proposals and the pen's stand-in classifier stage rather than append. `latestAssertion` reads proposals from staging and decisions from the record. Confirming and correcting write the member's own row carrying the proposal in its body, then unstage. The forming-thread naming and refusal paths do the same. The raw-log inspector now contains no machine-authored row, and says so.
+
+**`prototypes/daybook-schema-v1.html`** — nineteen kinds become eighteen; the dashed chip is relabelled a staged proposal and marked *not a kind*; the `agents` relation loses `class` and its detail cites §3 and §7; the pipeline diagram shows staging outside the record; the constraint pane says there is no machine writer.
+
+**Verified, not assumed.** Both prototypes were driven headless after the change. The beta: nine entries render, staged proposals still render dashed, confirming and correcting both work and land in the record, the threads view and the rereading room open, the raw log contains no `inference.proposed` and no reader-authored row, no JavaScript errors. The companion: all panes open, no errors.
+
+**Not touched.** The prototype's Method page still says a mature thread can be shared as a project. That is open ledger item 5, it is the members' to settle, and an earlier draft of this change edited it before the overreach was caught and reverted.

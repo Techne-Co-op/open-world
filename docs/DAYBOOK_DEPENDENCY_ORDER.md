@@ -161,3 +161,7 @@ Added to the open ledger:
 Open ledger items 9 and 10 close with D-01. Item 11 stays open and gets sharper: under scoped impersonation the reader reads only as the member it serves, so its curriculum is that member's own corrections and no one else's.
 
 12. **Where a staged inference lives** before a member acts on it.
+
+## The artifacts now carry the decisions
+
+As of D-05 the four delivered artifacts are no longer held verbatim: D-01 and D-03 are applied in the prose and, for `daybook-beta-v3.html`, in the engine. The delivered hashes in `DAYBOOK_DECISIONS.md` remain the record of what arrived, and every edit is named in a decision. Open ledger items 9 through 12 are closed. Item 11 left this repository as `Techne-Co-op/techne.coop` issue #273. **Item 5 — threads as proto-projects against the STANDING constraint — is the only one still open, and it is the members'.**

@@ -456,16 +456,23 @@ body.guest .guestbar{display:flex}
 (function(){
 "use strict";
 /* engine: identical schema to v2 — one growing log, views as folds */
-var agents={todd:{id:'todd',name:'Todd',cls:'member'},aaron:{id:'aaron',name:'Aaron',cls:'member'},kevin:{id:'kevin',name:'Kevin',cls:'member'},lucien:{id:'lucien',name:'Lucien',cls:'member'},jo:{id:'jo',name:'Jo',cls:'member'},reader:{id:'reader',name:'the reader',cls:'machine'}};
+/* D-01: the reader is not an agent row and holds no grant. It writes nothing. */
+var agents={todd:{id:'todd',name:'Todd',cls:'member'},aaron:{id:'aaron',name:'Aaron',cls:'member'},kevin:{id:'kevin',name:'Kevin',cls:'member'},lucien:{id:'lucien',name:'Lucien',cls:'member'},jo:{id:'jo',name:'Jo',cls:'member'}};
 var VIEWER='todd',TYPES=['note','question','wager','demo','close','contest'];
 var events=[],nextAddr=1;
 function ev(agent,kind,body,about,ago,label){var e={id:events.length+1,addr:'\u00a7'+(nextAddr++),agent:agent,kind:kind,body:body||{},about:about||null,ago:ago,when:label||'just now'};events.push(e);return e}
 function findByAddr(a){return events.find(function(e){return e.addr===a})}
+/* D-03: staging. Not the record — no agent, no kind, no address, freely dropped.
+   Held under the viewer's own identity; nothing here has entered events. */
+var staged=[],nextStage=1;
+function stage(body,about,ago){var p={sid:nextStage++,body:body||{},about:about||null,ago:ago};staged.push(p);return p}
+function stagedFor(addr){for(var i=staged.length-1;i>=0;i--){if(staged[i].about===addr&&!staged[i].body.forming)return staged[i]}return null}
+function unstage(addr){staged=staged.filter(function(p){return !(p.about===addr&&!p.body.forming)})}
 var threads=[{id:'treasury',name:'the treasury thread',namedBy:'lucien'},{id:'measure',name:'the onboarding measure',namedBy:'kevin'},{id:'threshold',name:'the guest threshold',namedBy:'aaron'}];
 var terms=[{t:'the close',voices:6,uses:31},{t:'the pen',voices:5,uses:24},{t:'warrant',voices:4,uses:19},{t:'the threshold',voices:4,uses:17},{t:'provenance',voices:3,uses:12},{t:'reconciliation',voices:1,uses:8,one:'Lucien'},{t:'the fold',voices:1,uses:6,one:'Todd'},{t:'the weaving',voices:3,uses:4,fresh:'coined by Jo \u00b7 spreading'}];
 var E={};
 E.tnote=ev('todd','entry.written',{text:'Reconciled the share ledger against the patronage entries. The fold and the treasury\u2019s books agree, which is the point of having one record.',type:'note',thread:'treasury',mentions:[]},null,24,'3 weeks ago');
-ev('reader','inference.proposed',{type:'note',thread:'treasury',reason:'uses \u201creconciled\u201d and \u201cledger\u201d, terms this thread owns'},E.tnote.addr,24);
+stage({type:'note',thread:'treasury',reason:'uses \u201creconciled\u201d and \u201cledger\u201d, terms this thread owns'},E.tnote.addr,24);
 ev('todd','inference.confirmed',{},E.tnote.addr,24);
 E.lcite=ev('lucien','entry.written',{text:'{todd}\u2019s treasury note saved me an hour of reconstruction. Citing it here.',type:'note',thread:'treasury',mentions:['todd'],cites:[E.tnote.addr]},null,21,'3 weeks ago');
 ev('lucien','inference.confirmed',{},E.lcite.addr,21);
@@ -480,31 +487,32 @@ E.close35=ev('todd','gathering.held',{what:'Wednesday close \u00b7 week 35',left
 E.demoP=ev('todd','demo.promised',{what:'Launch follow-up demo',claims:'capture, chips, the day lens'},null,11,'Aug 20');
 ev('todd','demo.reported',{status:'shown \u00b7 two claims failed \u00b7 one contest filed'},E.demoP.addr,10,'Aug 21');
 E.wclose=ev('todd','entry.written',{text:'Wednesday room went long. {kevin} kept us honest about the measure before anyone ran the trial.',type:'close',thread:'measure',mentions:['kevin']},null,5,'Wednesday');
-ev('reader','inference.proposed',{type:'close',thread:'measure',reason:'names the Wednesday room; \u201cthe measure\u201d is this thread\u2019s own term'},E.wclose.addr,5);
+stage({type:'close',thread:'measure',reason:'names the Wednesday room; \u201cthe measure\u201d is this thread\u2019s own term'},E.wclose.addr,5);
 ev('todd','inference.confirmed',{},E.wclose.addr,5);
 E.wager=ev('todd','entry.written',{text:'I bet {aaron} that if practice notes ship with the next update, support questions drop by half. He took it.',type:'wager',thread:null,mentions:['aaron']},null,1,'yesterday');
 ev('todd','inference.confirmed',{},E.wager.addr,1);
 ev('todd','wager.sealed',{terms:'support questions in the fortnight after release \u003c 50% of last cycle',hash:'sha-9f2c\u2026 sealed yesterday',counterparty:'aaron',resolves:'Oct 1'},E.wager.addr,1,'yesterday');
 E.aq=ev('aaron','entry.written',{text:'{todd} and I disagree about where the guest threshold sits. Logging it here so we argue it in the open.',type:'question',thread:'threshold',mentions:['todd']},null,1,'yesterday');
-ev('reader','inference.proposed',{type:'question',thread:'threshold',reason:'ends open-ended; \u201cthe threshold\u201d is this thread\u2019s own term; names Todd, who is in it'},E.aq.addr,1);
+stage({type:'question',thread:'threshold',reason:'ends open-ended; \u201cthe threshold\u201d is this thread\u2019s own term; names Todd, who is in it'},E.aq.addr,1);
 E.jform=ev('jo','entry.written',{text:'The record should introduce itself. No navigation, no explanation \u2014 the weaving shows itself.',type:'note',thread:null,mentions:[]},null,0,'today');
-ev('reader','inference.proposed',{type:'note',thread:null,reason:'no question mark, no stake named'},E.jform.addr,0);
-ev('reader','inference.proposed',{forming:['reading surface',E.rq.addr,E.jform.addr],reason:'shares \u201creading surface\u201d words and a span of days with '+E.rq.addr+' \u00b7 no member\u2019s hand yet'},E.jform.addr,0);
+stage({type:'note',thread:null,reason:'no question mark, no stake named'},E.jform.addr,0);
+stage({forming:['reading surface',E.rq.addr,E.jform.addr],reason:'shares \u201creading surface\u201d words and a span of days with '+E.rq.addr+' \u00b7 no member\u2019s hand yet'},E.jform.addr,0);
 E.walk=ev('todd','entry.written',{text:'Walked {jo} through the pen today \u2014 her first entries are already sharper questions than my early notes were.',type:'note',thread:'threshold',mentions:['jo']},null,0,'today');
-ev('reader','inference.proposed',{type:'note',thread:'threshold',reason:'uses \u201cthe pen\u201d and \u201cwalkthrough\u201d; names Jo; a day after '+E.aq.addr},E.walk.addr,0);
+stage({type:'note',thread:'threshold',reason:'uses \u201cthe pen\u201d and \u201cwalkthrough\u201d; names Jo; a day after '+E.aq.addr},E.walk.addr,0);
 ev('aaron','inference.corrected',{was:'note',now:'question',reason:'it asks, even without the mark'},E.rq.addr,8);
 ev('kevin','inference.corrected',{was:'note',now:'contest',reason:'it interrupts, it doesn\u2019t observe'},E.kcon.addr,7);
 var corrTally={aaron:14,kevin:9,todd:4,lucien:2,jo:1};
 
 function latestAssertion(entry){
-  var chain=events.filter(function(e){return e.about===entry.addr&&/^inference\./.test(e.kind)&&!e.body.forming});
+  var chain=events.filter(function(e){return e.about===entry.addr&&/^inference\./.test(e.kind)});
   var st='thinking',type=entry.body.type,thread=entry.body.thread,reason=null;
+  var pr=stagedFor(entry.addr);
+  if(pr){st='proposed';type=pr.body.type;thread=pr.body.thread;reason=pr.body.reason}
   chain.forEach(function(e){
-    if(e.kind==='inference.proposed'){st='proposed';type=e.body.type;thread=e.body.thread;reason=e.body.reason}
-    if(e.kind==='inference.confirmed')st='confirmed';
+    if(e.kind==='inference.confirmed'){st='confirmed';if(e.body.proposal){type=e.body.proposal.type||type;thread=e.body.proposal.thread||thread}}
     if(e.kind==='inference.corrected'){st='confirmed';type=e.body.now||type}
   });
-  if(!chain.length)st='confirmed';
+  if(!chain.length&&!pr)st='confirmed';
   return {st:st,type:type,thread:thread,reason:reason};
 }
 function foldEntries(g){return events.filter(function(e){return e.kind==='entry.written'}).map(function(e){return {e:e,a:latestAssertion(e)}}).filter(function(x){return !g||x.a.st==='confirmed'}).sort(function(x,y){return x.e.ago-y.e.ago||y.e.id-x.e.id})}
@@ -526,7 +534,7 @@ function foldThread(tid){
   var ppl={};ents.forEach(function(x){ppl[x.e.agent]=1;(x.e.body.mentions||[]).forEach(function(m){ppl[m]=1})});
   return {entries:ents,questions:qs,people:Object.keys(ppl),alive:ents.some(function(x){return x.e.ago<=7}),last:ents.length?ents[0].e.when:'\u2014'};
 }
-function foldForming(){return events.filter(function(e){return e.kind==='inference.proposed'&&e.body.forming}).map(function(e){return {ev:e,members:e.body.forming.slice(1)}})}
+function foldForming(){return staged.filter(function(p){return p.body.forming}).map(function(p){return {ev:p,members:p.body.forming.slice(1)}})}
 function foldOpen(){return {questions:events.filter(function(e){return e.kind==='question.owned'}),wagers:events.filter(function(e){return e.kind==='wager.sealed'}),contests:events.filter(function(e){return e.kind==='contest.filed'})}}
 function foldShare(v){
   var mine=events.filter(function(e){return e.agent===v&&e.kind==='entry.written'});
@@ -613,7 +621,7 @@ function submitEntry(v,isCord){
   v=(v||'').trim();if(!v)return;
   var mentions=[];
   Object.keys(agents).forEach(function(id){
-    if(id!==VIEWER&&agents[id].cls!=='machine'&&new RegExp('\\b'+agents[id].name+'\\b','i').test(v)){
+    if(id!==VIEWER&&new RegExp('\\b'+agents[id].name+'\\b','i').test(v)){
       mentions.push(id);v=v.replace(new RegExp('\\b'+agents[id].name+'\\b'),'{'+id+'}');
     }
   });
@@ -625,7 +633,7 @@ function submitEntry(v,isCord){
     var gth=/threshold|guest|newcomer/i.test(v)?'threshold':(/measure|trial/i.test(v)?'measure':(/treasury|ledger|patronage/i.test(v)?'treasury':null));
     var reason=isCord?'entered through the cord \u2014 carried as a contest, with your standing'
       :'pattern read from the words \u2014 the live reader replaces this stand-in'+(gth?'; \u201c'+threadName(gth)+'\u201d owns words this entry uses':'');
-    ev('reader','inference.proposed',{type:gt,thread:gth,reason:reason},ne.addr,0);
+    stage({type:gt,thread:gth,reason:reason},ne.addr,0);
     flashChip=ne.id;renderAll();
   },950);
 }
@@ -691,7 +699,8 @@ document.getElementById('stream').addEventListener('click',function(evn){
   var w=t.closest('[data-why]');
   if(w){var el=document.getElementById('why-'+w.dataset.why);if(el)el.classList.toggle('on');return}
   var ok=t.closest('[data-ok]');
-  if(ok){var e0=events.find(function(e){return e.id===+ok.dataset.ok});ev(VIEWER,'inference.confirmed',{},e0.addr,0);flashInk=e0.id;renderAll();return}
+  if(ok){var e0=events.find(function(e){return e.id===+ok.dataset.ok});var pr0=stagedFor(e0.addr);
+    ev(VIEWER,'inference.confirmed',{proposal:pr0?pr0.body:null},e0.addr,0);unstage(e0.addr);flashInk=e0.id;renderAll();return}
   var no=t.closest('[data-no]');
   if(no){
     var i=+no.dataset.no,box=document.getElementById('why-'+i);
@@ -711,8 +720,9 @@ document.getElementById('stream').addEventListener('click',function(evn){
     var e2=events.find(function(e){return e.id===i2});
     var pick=box2.dataset.pick||latestAssertion(e2).type;
     var say=(document.getElementById('fixsay-'+i2)||{}).value||'';
-    ev(VIEWER,'inference.corrected',{now:pick,reason:say||'(no reason given)'},e2.addr,0);
-    corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;flashInk=i2;renderAll();return}
+    var pr2=stagedFor(e2.addr);
+    ev(VIEWER,'inference.corrected',{now:pick,was:pr2?pr2.body.type:null,proposal:pr2?pr2.body:null,reason:say||'(no reason given)'},e2.addr,0);
+    unstage(e2.addr);corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;flashInk=i2;renderAll();return}
   var m=t.closest('.mn');if(m){openPerson(m.dataset.p);return}
   var tl=t.closest('.thlink');if(tl)openThread(tl.dataset.t);
 });
@@ -802,7 +812,7 @@ function openForming(i){
   var fm=foldForming()[i];if(!fm)return;
   var ents=fm.members.map(findByAddr).filter(Boolean);
   openPane('forming',
-    '<h3>Is this a thread?</h3><div class="std">proposed by the reader</div>'
+    '<h3>Is this a thread?</h3><div class="std">staged by the reader · not in the record until you name it</div>'
     +'<div class="inf"><span class="wk">its evidence</span>'+fm.ev.body.reason+'</div>'
     +ents.map(function(e){return '<div class="tent"><p>'+linkNames(e.body.text)+'</p><span class="tw">'+e.addr+' \u00b7 '+nameOf(e.agent)+' \u00b7 '+e.when+'</span></div>'}).join('')
     +'<p>If it is real, it needs a member\u2019s name for it \u2014 in the members\u2019 own words, not the reader\u2019s.</p>'
@@ -915,10 +925,12 @@ function openReread(){
       +'<div class="actions"><button class="tbtn go" id="rrK">The reader had it right</button>'
       +'<button class="tbtn" id="rrF">Keep my reading instead</button></div>'
       +'<div class="fine">Skipping is fine and costs nothing. Corrections teach far more than agreements \u2014 and the reader is never allowed to make agreeing easier than being right.</div>');
-    document.getElementById('rrK').addEventListener('click',function(){ev(VIEWER,'inference.confirmed',{via:'rereading'},x.e.addr,0);idx++;step()});
+    document.getElementById('rrK').addEventListener('click',function(){var prr=stagedFor(x.e.addr);ev(VIEWER,'inference.confirmed',{via:'rereading',proposal:prr?prr.body:null},x.e.addr,0);unstage(x.e.addr);idx++;step()});
     document.getElementById('rrF').addEventListener('click',function(){
       var say=document.getElementById('rrsay').value;
-      ev(VIEWER,'inference.corrected',{reason:say||'(no reason given)',via:'rereading'},x.e.addr,0);
+      var prf=stagedFor(x.e.addr);
+      ev(VIEWER,'inference.corrected',{reason:say||'(no reason given)',via:'rereading',proposal:prf?prf.body:null},x.e.addr,0);
+      unstage(x.e.addr);
       corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;idx++;step();
     });
   }
@@ -930,19 +942,19 @@ document.getElementById('railReread').addEventListener('click',openReread);
 function openMethod(){
   openPane('the method',
     '<h3>The method</h3>'
-    +'<p>One journal, seven readings. Everything enters through the pen; nothing is ever edited or erased \u2014 corrections are added alongside, so the record can testify. A background reader proposes types and threads with its reasons shown. Dashed means proposed by machine; solid means a member decided \u2014 and the type itself tells you who is speaking: the human voice is set in serif, the record\u2019s grammar in the machine hand.</p>'
+    +'<p>One journal, seven readings. Everything enters through the pen; nothing is ever edited or erased \u2014 corrections are added alongside, so the record can testify. A background reader proposes types and threads with its reasons shown. Dashed means staged by the reader and not in the record at all; solid means a member decided and it is \u2014 and the type itself tells you who is speaking: the human voice is set in serif, the record\u2019s grammar in the machine hand.</p>'
     +'<p>Relationships come from writing. Threads are born named by members, and a mature thread can be shared into the open world as a project \u2014 by reference, its entries becoming the project\u2019s provenance. The Open holds what the record owes the future. Gatherings keep the room and the demo honest. Words is the language forming, and the reader\u2019s dictionary, inspectable. Your Share is a reading of your own acts, never a scoreboard and never comparative.</p>'
     +'<p>The cord \u2014 \u201csomething is wrong with how we\u2019re working\u201d \u2014 lives inside the pen and at the rail\u2019s foot: your standing to contest lives inside your standing to write.</p>'
-    +'<p class="fine">The reader is an agent of machine class and may write only inferences. Not built, deliberately: no feed, no notifications, no progress tracking, no admin panel. The full documents govern: The Second Generation, the schema, and The Reader\u2019s Instructions.</p>'
+    +'<p class="fine">The reader is not an agent row and writes nothing: it stages proposals to you, and your act is what enters the record. Not built, deliberately: no feed, no notifications, no progress tracking, no admin panel. The full documents govern: The Second Generation, the schema, and The Reader\u2019s Instructions.</p>'
     +'<div class="actions"><button class="tbtn">Open the register</button><button class="tbtn" data-showlog>See the record itself</button></div>');
 }
 function showLog(){
   openPane('the record itself',
     '<h3>The record itself</h3><div class="std">the one growing table \u00b7 appended, never edited \u00b7 every view is a fold over this</div>'
     +events.slice().reverse().slice(0,30).map(function(e){
-      return '<div class="logrow"><span class="la">'+e.addr+'</span><span class="lk">'+e.kind+'</span><span class="lb">'+nameOf(e.agent)+(agents[e.agent].cls==='machine'?' [machine]':'')+' \u00b7 '+(e.about?'about '+e.about+' \u00b7 ':'')+(e.body.text||e.body.reason||e.body.terms||e.body.what||e.body.q||JSON.stringify(e.body)).slice(0,72)+'</span></div>';
+      return '<div class="logrow"><span class="la">'+e.addr+'</span><span class="lk">'+e.kind+'</span><span class="lb">'+nameOf(e.agent)+' \u00b7 '+(e.about?'about '+e.about+' \u00b7 ':'')+(e.body.text||e.body.reason||e.body.terms||e.body.what||e.body.q||JSON.stringify(e.body)).slice(0,72)+'</span></div>';
     }).join('')
-    +'<div class="fine" style="margin-top:12px">Machine rows are the reader\u2019s inferences \u2014 provenance in the same grammar as everything else. The chain of about-addresses is how any state on any screen traces back to acts.</div>');
+    +'<div class="fine" style="margin-top:12px">Every row here was written by a member. The reader\u2019s proposals are not in this table at all \u2014 they are staged, and enter only as provenance inside the confirmation or correction a member makes of them. The chain of about-addresses is how any state on any screen traces back to acts.</div>');
 }
 document.getElementById('railMethod').addEventListener('click',openMethod);
 document.getElementById('railLog').addEventListener('click',showLog);
@@ -999,20 +1011,20 @@ paneBody.addEventListener('click',function(evn){
     var fm=foldForming()[+nt.dataset.namethread];
     var id='t'+(threads.length+1);
     threads.push({id:id,name:nm,namedBy:VIEWER});
-    ev(VIEWER,'thread.named',{thread:id,name:nm},fm.ev.addr,0);
+    ev(VIEWER,'thread.named',{thread:id,name:nm,proposal:fm.ev.body},fm.members[0]||null,0);
     fm.members.forEach(function(addr){
       var src=findByAddr(addr);
       ev(VIEWER,'thread.joined',{thread:id},addr,0);
       if(src&&src.kind==='entry.written'){src.body.thread=id;ev(VIEWER,'inference.confirmed',{},addr,0)}
     });
-    events=events.filter(function(e){return !(e.body&&e.body.forming&&e.addr===fm.ev.addr)});
+    staged=staged.filter(function(p){return p.sid!==fm.ev.sid});
     closePane();renderAll();return}
   var xt=t.closest('[data-notthread]');
   if(xt){
     var fm2=foldForming()[+xt.dataset.notthread];
-    ev(VIEWER,'inference.corrected',{reason:'not a thread',via:'forming refusal'},fm2.ev.addr,0);
+    ev(VIEWER,'inference.corrected',{reason:'not a thread',via:'forming refusal',proposal:fm2.ev.body},fm2.members[0]||null,0);
     corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;
-    events=events.filter(function(e){return !(e.body&&e.body.forming&&e.addr===fm2.ev.addr)});
+    staged=staged.filter(function(p){return p.sid!==fm2.ev.sid});
     closePane();renderAll();return}
 });
 
@@ -1035,7 +1047,7 @@ route();
 /* first-visit tutorial */
 var pages=[
   {h:'This is a shared journal.',p:'Everyone writes into one record. Nothing is ever edited or erased \u2014 corrections are added alongside, so the record can be trusted to testify later. You just write; the structure comes to you. The pen is always one tap away.'},
-  {h:'A reader sorts, and you have the last word.',p:'After you enter something, a background reader proposes what it was and which conversation it continues, with its reasons shown. Dashed means proposed by machine; solid means a member decided \u2014 and the lettering tells you who is speaking: your words in the book hand, the record\u2019s grammar in the machine hand. Corrections are how it learns to read the way this co-op thinks.'},
+  {h:'A reader sorts, and you have the last word.',p:'After you enter something, a background reader proposes what it was and which conversation it continues, with its reasons shown. Dashed means staged by the reader and not in the record at all; solid means a member decided and it is \u2014 and the lettering tells you who is speaking: your words in the book hand, the record\u2019s grammar in the machine hand. Corrections are how it learns to read the way this co-op thinks.'},
   {h:'Seven readings, and a line that is yours.',p:'Threads and The Open sit beside the Journal; the rest are one tap deeper. All of them are the same journal, read for different things. And inside the pen you will always find one quiet line \u2014 \u201csomething is wrong with how we\u2019re working\u201d \u2014 your standing to contest, carried into the same record under your name.'}
 ];
 var pg=0;

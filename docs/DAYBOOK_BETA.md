@@ -38,14 +38,14 @@ To which the Daybook adds, from the register: **the log is the journal, and ever
 
 ## 3 · The schema
 
-One growing table; everything else is identity, vocabulary, or computation. *(Unchanged since v0.)*
+One growing table; everything else is identity, vocabulary, or computation. *(Unchanged since v0 except as D-01 and D-03 amend it: no `class` on `agents`, and `inference.proposed` is a staging shape rather than an event kind.)*
 
 ### agents
-*Home: CIS. The Daybook adds only a class.*
+*Home: CIS. The Daybook adds nothing.*
 
 | field | meaning |
 |---|---|
-| `id · name · class` | class: **member · guest · steward · machine**. The reader is a row here, not an exception. |
+| `id · name` | as the CIS holds them. Membership class lives on the membership row and appointments in `role_grants`, per the authority map §3. **The reader is not a row here** — it holds no role and no grant (D-01). |
 
 ### events — *the one growing table*
 
@@ -53,11 +53,11 @@ One growing table; everything else is identity, vocabulary, or computation. *(Un
 |---|---|
 | `id · at · agent_id` | who, when. **No `updated_at` exists** — rows are never edited; corrections are new rows. |
 | `kind` | the event grammar (below) |
-| `body` | entry text, or the payload the kind needs — a proposed type and its reasons, sealed criteria as a hash, a warrant. Reasons stored in member-legible terms, never only a score. |
-| `about_event_id` | inference → entry, confirmation → inference, resolution → wager. The chain is the audit. |
+| `body` | entry text, or the payload the kind needs — the reader's proposal and its reasons carried as provenance, sealed criteria as a hash, a warrant. A correction carries the proposal it rejected, verbatim, so a refusal survives its refusal. Reasons stored in member-legible terms, never only a score. |
+| `about_event_id` | confirmation or correction → entry, resolution → wager. The chain is the audit. |
 | `address` | the citable §-address, assigned at append, permanent. |
 
-**Event kinds.** `entry.written` · `inference.proposed` · `inference.confirmed` · `inference.corrected` · `thread.named` · `thread.joined` · `thread.merged` · `thread.split` · `thread.rested` · `wager.sealed` · `wager.resolved` · `question.owned` · `question.resolved` · `contest.filed` · `gathering.held` · `demo.promised` · `demo.reported` · `rereading.held` · `curation.shelved`
+**Event kinds.** `entry.written` · `inference.confirmed` · `inference.corrected` · `thread.named` · `thread.joined` · `thread.merged` · `thread.split` · `thread.rested` · `wager.sealed` · `wager.resolved` · `question.owned` · `question.resolved` · `contest.filed` · `gathering.held` · `demo.promised` · `demo.reported` · `rereading.held` · `curation.shelved`
 
 ### edges
 
@@ -69,7 +69,7 @@ One growing table; everything else is identity, vocabulary, or computation. *(Un
 
 | field | meaning |
 |---|---|
-| `id · name · named_by` | a row exists only once a member names it. **No state column** — alive, dormant, and membership are folds. A forming thread is not here at all; it is only an unconfirmed inference in `events`. |
+| `id · name · named_by` | a row exists only once a member names it. **No state column** — alive, dormant, and membership are folds. A forming thread is not here at all; it is only a staged inference, which is not in `events` either until a member acts on it. |
 
 ### terms
 
@@ -89,7 +89,7 @@ Obligations (The Open is a fold). Balances and shares. Thread state. Notificatio
 |---|---|
 | **Journal** | `entry.written` joined to its latest inference chain — latest assertion wins for display; every prior assertion remains. |
 | **People** | `mentions` edges folded pairwise around the viewer; profiles fold one agent's events into four strands (Language, Artifacts, Methodology, Training). |
-| **Threads** | threads joined to membership events; forming = unconfirmed thread inferences, rendered dashed. |
+| **Threads** | threads joined to membership events; forming = staged thread inferences, rendered dashed and read from staging, not from the record. |
 | **The Open** | the unresolved: owned-not-resolved questions, sealed-not-resolved wagers, filed-not-carried contests. |
 | **Gatherings** | `gathering.held`, `demo.promised`/`demo.reported`, with what each left = events whose about-chain roots in it. |
 | **Words** | terms folded with usage counts and distinct voices. |
@@ -141,7 +141,7 @@ The current generated-design fingerprint: Inter or unchosen system sans; indigo-
 ## 6 · Interface principles
 
 - **Capture is one gesture.** One box. The grammar arrives afterward as a proposal, never as a form to fill.
-- **Dashed means proposed by machine; solid means a member decided.** With the type rule, this is the whole visible vocabulary of the machine layer.
+- **Dashed means staged by the reader and not yet in the record at all; solid means a member decided and it is.** With the type rule, this is the whole visible vocabulary of the machine layer.
 - **The reader shows its reasons** — the citation, the shared word, the person, the timing — never a score.
 - **The system explains itself once**, in the tutorial and the Method page, and stays quiet in the main views.
 - **Addresses are first-class.** The frank copies; citation bears weight because addresses never move.
@@ -160,7 +160,7 @@ No feed. No notifications. No progress tracking or personal-trajectory dashboard
 
 > *Open question:* threads-as-proto-projects should be pressure-tested against the STANDING constraint before it is treated as settled.
 
-**The map applied as row-level security.** A guest reads confirmed entries and named threads. A member writes events and folds their own share. The machine agent may write **only inference kinds** — it structurally cannot enter, confirm, name, or resolve, which makes "the member has the last word" a database constraint rather than a UI promise. Stewards carry Triad designations.
+**The map applied as row-level security.** A guest reads confirmed entries and named threads. A member writes events and folds their own share. **The reader writes nothing.** Every row in `events` is written by a member under their own `agent_id`, so "the member has the last word" is not a fence around a machine writer but the plain fact that nothing enters the record without a member's act. A staged inference lives under the asking member's own identity in a staging relation that is not a record class — no address, no append, self-only — and becomes a record only when the member confirms or corrects it (D-01, D-03). Stewards carry Triad designations.
 
 **Known stop cards.** (1) Whether guest reading includes forming threads. (2) Where peer rereading's consent boundary sits in the map's terms. (3) What a "share as a project" act may create in the CIS from this door.
 
