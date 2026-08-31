@@ -79,7 +79,7 @@ One growing table; everything else is identity, vocabulary, or computation. *(Un
 
 ### Deliberately not tables
 
-Obligations (The Open is a fold). Balances and shares. Thread state. Notification queues. Training weights — the reader's curriculum *is* the correction events, so "whose judgment trained it" stays a query, not a mystery.
+Obligations (The Open is a fold). Balances and shares. Thread state. Notification queues. Training weights — the reader's curriculum *is* the correction events, so "what trained it on my writing" stays a query, not a mystery. Scoped impersonation means each member can answer that of their own record and no one else's; whether corrections are disclosed more widely than the entries they concern is a question for the authority map, filed and not assumed.
 
 ---
 

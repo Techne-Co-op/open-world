@@ -66,3 +66,35 @@ Until now every delivered artifact was held exactly as received, with findings r
    Labeled rather than renamed, deliberately. The risk was a reader mistaking invented entries for the record, and a label answers that directly while keeping the demonstration's texture — a room of people who actually know each other. If the names should go instead, that is a one-line change and a different decision.
 
 3. **`docs/DAYBOOK_BETA.md` §9** — the honest-seams paragraph said a service worker is not present. True of the prototype, not of the repository: `sw.js` is tracked at the root and caches the shell, never the record. The sentence now says which is which and that the build adopts the existing one rather than writing a second.
+
+---
+
+## D-03 · Where a staged inference lives
+
+**Decided by** Todd Youngblood, 2026-08-31, in `#open-world` (`0ddf709087acac0dbac2e9d990f7232956a9e260cc33eac72ce004f863ec2ca8`), on the proposal put to him.
+
+D-01 said a staged inference lives outside `events` and left the location open, which was the question D-01 created. It is now answered.
+
+**A staged inference lives under the asking member's own identity, in a staging relation that is not a record class.** No `address`. No append discipline — rows are updated and freely deleted. Row-level security is self-only: a member sees their own staging and nobody else's, including stewards. The member's own session writes the row, running as that member, so the writer is the member and not the reader.
+
+**What this preserves.** No grant appears anywhere for a non-human. Not a role, not a `class`, not even the definer-function custody arrangement AM v0.1 §7 permits for service paths — the Daybook does not need to reach for it. The reader reads as the member it serves, proposes to that member's screen, and the only hand that touches the database is the member's own.
+
+**The beta is unchanged.** Persistence is in-memory in the prototype, which is the same shape with a shorter life. Nothing about D-03 asks the beta to grow a backend.
+
+**What it costs.** One schema addition, which is not nothing. It rides as a flagged IM addendum on the §9 precedent, where `auth_user_id` and `role_grants` were carried openly rather than slipped in. That precedent is the right one and the object is a milder one: an addendum granting nothing to a non-human is a different animal from the one D-01 refused.
+
+Open ledger item 12 closes.
+
+---
+
+## D-04 · The curriculum claim narrowed to what is true, and the wider question filed
+
+**Decided by** Todd Youngblood, 2026-08-31, same message as D-03: *A now, file B.*
+
+**A, taken.** The specification §3 and the schema companion both promised that *whose judgment trained it* stays a query, not a mystery. Under scoped impersonation that is false as written: a member reads as themselves, so they can audit what trained the reader on their own writing and no one else's. Both sentences now say that, and both name the wider question as filed rather than answered. Edited under the hold released in D-02; the delivered hashes stand as the record of what arrived.
+
+**B, filed.** Whether corrections may be disclosed across members while the entries they concern stay private is a question for the authority map, not for this application. It has a real argument on both sides — AM v0.1 §2 says the default runs toward disclosure to members, and a correction's reasons are about the reader's behavior rather than the member's content; against that, a correction quotes the writing it corrects. It needs an anchor and a human. Filed against `techne.coop`, cross-referenced here.
+
+**C stands where it was.** The Rereading room already discloses the correction distribution at every close, which is aggregate disclosure and needs no decision.
+
+Open ledger item 11 narrows to B and leaves this repository.
