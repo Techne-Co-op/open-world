@@ -1,8 +1,8 @@
 /* Open World service worker.
    Rule (issue #253): the app caches its shell and NEVER the record.
    The halt wins over offline: nothing from the CIS is ever served from cache. */
-const SHELL_CACHE = 'open-world-shell-v1';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
+const SHELL_CACHE = 'open-world-shell-v2';
+const SHELL = ['/', '/index.html', '/daybook/', '/daybook/index.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
