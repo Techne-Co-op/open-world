@@ -148,3 +148,16 @@ Added to the open ledger:
 9. **Which kinds the machine class may write**, stated once, in the terms the RLS predicate will use.
 10. **Whether `disagreement.noted` is a kind, a staged payload, or neither.**
 11. **The record class of a correction** — what a member may query of another member's corrections without breaking the share's unqueryability.
+
+## D-01 and what it moves in this order
+
+`docs/DAYBOOK_DECISIONS.md` D-01 (Todd Youngblood, 2026-08-31): the reader holds no write grant, writes nothing, and a staged inference enters `events` only as a member's own row. Against the layers above:
+
+- **Layer 1 is no longer blocked on grounding a machine class.** Open ledger item 7 is answered — AM v0.1 does not ground one, and the Daybook no longer needs it to. The stop card is not filed; the capability is dropped.
+- **Layer 5 loses a dependency.** The live reader depended on the machine class being grounded. It now depends only on `READERS_INSTRUCTIONS.md` and on layers 2 through 4.
+- **Layer 2 gains a requirement**: `inference.corrected` must carry the rejected proposal and its reasons in the body, since a refused proposal no longer appends anywhere.
+- **A new dependency appears between layers 2 and 5**: wherever staged inferences live before a member acts. Outside `events` is a boundary, not a location, and nothing is specified. Open ledger item 12.
+
+Open ledger items 9 and 10 close with D-01. Item 11 stays open and gets sharper: under scoped impersonation the reader reads only as the member it serves, so its curriculum is that member's own corrections and no one else's.
+
+12. **Where a staged inference lives** before a member acts on it.
