@@ -165,3 +165,20 @@ Open ledger items 9 and 10 close with D-01. Item 11 stays open and gets sharper:
 ## The artifacts now carry the decisions
 
 As of D-05 the four delivered artifacts are no longer held verbatim: D-01 and D-03 are applied in the prose and, for `daybook-beta-v3.html`, in the engine. The delivered hashes in `DAYBOOK_DECISIONS.md` remain the record of what arrived, and every edit is named in a decision. Open ledger items 9 through 12 are closed. Item 11 left this repository as `Techne-Co-op/techne.coop` issue #273. **Item 5 — threads as proto-projects against the STANDING constraint — is the only one still open, and it is the members'.**
+
+## Layers 2 and 3 against the record
+
+**The CIS half of layer 2 exists.** techne.coop `supabase/migrations/0040_daybook_beta.sql` (PR #274) carries the five relations of §3 under a `beta_` prefix plus D-03's staging relation: append-only by trigger, the §-address assigned by sequence at append, no `updated_at`, row-level security that lets a member read and append only under their own identity, anon revoked, no machine class anywhere. Its header records that it was applied to the live CIS through the Management API. A read-only probe from this build agrees: `beta_events` answers (anon is refused with a permission error where a made-up relation is not found). No further migration is drafted from this repository, and none was needed.
+
+**The app half is the seam of D-06.** One interface, two adapters. In memory is the default and carries the seed. The record is chosen only when the shell's session exists in this origin and `beta_events` answers to it, probed once per page load; any failure falls back and the rail's foot says which session this is. The pen, confirmation, correction, rereading and thread naming all append through it, and nothing is shown as appended until the record has returned the address. That closes layer 3's dependency on layer 2's append and addressing as far as this repository can carry it.
+
+**What this closes.** The MARK flag on the seed (renamed, D-06). The in-place edit that 0040's header named as the one client act its trigger would refuse. Layer 2 and layer 3, on the app side.
+
+**Stop cards that remain, none of them this repository's:**
+
+- `app.techne.coop` has no DNS record. The route is built and Pages serves it; nothing resolves to it. Aaron holds the zone.
+- Sign-in lives at the shell (`/`), which sends the magic link under the CIS `uri_allow_list`. The allow list is production auth configuration and a named human's to change.
+- Guest reading of the record: anon reads nothing (0040), and ledger item 3 is unanswered. The guest surface stays on the seed until it is.
+- Staging still lives in the client session. Moving it into D-03's `beta_staging` relation is a build step with no authority gap, not yet taken; the live reader (layer 5) waits on it.
+- `beta_terms` is read and never written from this app. A word joins by use, and only the reader would notice one.
+- The PRD's promise that the member's last word is a database constraint is now the case (a row under another member's `agent_id` is refused by the record, not by the interface), and it has not been exercised by a second real member. That is a verification walk, not a build step.

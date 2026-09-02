@@ -40,7 +40,7 @@ And the reader's governance: [`docs/READERS_INSTRUCTIONS.md`](docs/READERS_INSTR
 
 **The artifact set is complete** apart from *The Second Generation*, which is method-history rather than behavior. Two crossings were found on the delivered set and are reported in the dependency document rather than resolved here — the largest being that the reader is instructed to stage two event kinds (`thread.forming`, `disagreement.noted`) that appear in neither the schema nor its own `inference.*` boundary.
 
-The prototype's seed data uses real members' first names against invented entries. Harmless in memory; not harmless if this page is ever served where a reader could take it for the record. See the flag in the dependency document.
+The prototype in `prototypes/` still carries real members' first names on its invented seed, labelled as such (D-02). The served route at `/daybook/` does not: its seed voices are invented people (D-06), and signed in at the shell it reads and appends the record's `beta_` relations under the member's own name, in memory otherwise. See the dependency document for what that closes and what remains a stop card.
 
 Note also that `techne.coop/daybook/` already publishes a *book* of that name — the launch weekend, verbatim, binding nothing. The instrument in this PRD shares its name and lineage and is a different object; which of the two the app is a door onto is an open question in the dependency document.
 
