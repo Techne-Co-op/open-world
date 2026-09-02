@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Status | Draft v0 · unadopted · for the Wednesday room |
-| Reference implementation | `daybook-beta-v2.html` (single file; the prototype is canonical for behavior) |
+| Reference implementation | `daybook-beta-v3.html` (single file; the prototype is canonical for behavior) |
 | Companion documents | `DAYBOOK_BETA.md` (specification) · `READERS_INSTRUCTIONS.md` (agent governance) · schema v0 · *The Second Generation* register |
 | Grounded in | techne.coop `/commonplace` · `/daybook` · `open-world` · the authority map |
 | Author | Todd Youngblood, with machine assistance, labeled as such |
@@ -30,13 +30,13 @@ Aligned to the participation ladder and the authority map. Every capability is `
 | **Member** | The pen and all seven readings. Writes, confirms, corrects, names threads, holds questions, seals wagers, files contests, rereads. |
 | **Guest** | The reading surface: confirmed entries and named threads, no machinery, no pen. Reading is the free side of the threshold; writing is what membership is. |
 | **Steward** | Everything a member has, plus Triad designations (venture/program) made in the CIS and displayed here. |
-| **The reader (machine)** | An agent of machine class that may write **only inference kinds**. It proposes; it never enters, confirms, names, resolves, or records. Governed entirely by `READERS_INSTRUCTIONS.md`. |
+| **The reader (machine)** | Not an agent row and not a database role. It **writes nothing**: it stages proposals to the asking member's own screen and storage, and the member's act is what enters the record. Governed entirely by `READERS_INSTRUCTIONS.md`, and bounded by D-01. |
 
 ## 4 · Principles (the constraints that are the product)
 
 1. **One information system.** The CIS is the single source of truth; the Daybook is a door, not a database. It invents no permission and holds no data of its own. The app caches its shell, never the record.
 2. **The log is the journal.** One growing events table with permanent §-addresses; every state on every screen is a fold over it. No `updated_at` exists anywhere.
-3. **Proposed vs decided is the whole machine vocabulary.** Dashed means proposed by the reader, with reasons in member-legible terms; solid means a member decided. The member's last word is a database constraint (RLS on the machine class), not a UI promise.
+3. **Staged vs decided is the whole machine vocabulary.** Dashed means staged by the reader, with reasons in member-legible terms, and not in the record at all; solid means a member decided and it is. The member's last word is not a fence around a machine writer but the plain fact that nothing enters the record without a member's act.
 4. **Composition, never a score.** Nothing ranks, sums, or compares members. A standing is a fold over one's own events, seen only by its subject — unqueryable for anyone else, not merely unshown.
 5. **The system explains itself once** — tutorial and Method page — and stays quiet in the main views.
 6. **The cord is standing, not support.** "Something is wrong with how we're working" files a contest, under the member's name, into the same record.

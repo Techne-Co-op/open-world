@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Daybook · Schema · beta v3</title>
+<style>
+/* type is provenance: serif = human voice · mono = the record's grammar */
+:root{
+  --serif:"Libre Baskerville",Georgia,serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;
+  --micro:.16s;--dur:.3s;--ease:cubic-bezier(.4,0,.2,1);
+}
+html[data-mode="dark"]{
+  --bg:#101014;--surface:#17171C;--raised:#1E1E24;--line:#26262D;--rule:#3A3A42;
+  --heading:#EAE6E0;--text:#CFCBC4;--muted:#8D8880;--faint:#5C574F;
+  --blue:#6A8AC4;--blue-text:#9AB7E8;--ember:#C4956A;--ember-text:#D6A87C;
+  --shadow:0 18px 60px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.4);
+}
+html[data-mode="light"]{
+  --bg:#F6F4EE;--surface:#FDFCF9;--raised:#FFFFFE;--line:#DCD7CB;--rule:#9A958A;
+  --heading:#1A1A1F;--text:#2E2C28;--muted:#645F57;--faint:#A49E92;
+  --blue:#48679C;--blue-text:#39588F;--ember:#8A6A4A;--ember-text:#6F5436;
+  --shadow:0 18px 60px rgba(40,35,25,.22),0 2px 10px rgba(40,35,25,.12);
+}
+*{box-sizing:border-box}
+html{color-scheme:dark light}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+  font:400 13.5px/1.7 var(--serif);-webkit-font-smoothing:antialiased;
+  transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button{font-family:var(--serif);cursor:pointer}
+
+.wrap{max-width:1360px;margin:0 auto;padding:var(--s5) var(--s5) var(--s6)}
+header{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s2)}
+header h1{font:700 21px/1.3 var(--serif);color:var(--heading);margin:0;letter-spacing:-.01em}
+header .sub{font:400 12px/1.5 var(--serif);font-style:italic;color:var(--muted)}
+header .mode{margin-left:auto;font:400 11.5px/1 var(--serif);color:var(--muted);background:none;border:1px solid var(--line);border-radius:3px;padding:7px 12px;min-height:30px}
+header .mode:hover{color:var(--heading);border-color:var(--rule)}
+.lede{font-size:13px;color:var(--muted);max-width:78ch;margin:0 0 var(--s5)}
+.lede b{color:var(--heading)}
+
+.grid{display:grid;grid-template-columns:minmax(280px,340px) 1fr minmax(280px,340px);gap:var(--s4);align-items:start}
+@media (max-width:1060px){.grid{grid-template-columns:1fr 1fr}}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+
+.sect{font:400 12px/1.6 var(--serif);font-style:italic;color:var(--ember-text);border-bottom:1px solid var(--line);padding-bottom:4px;margin:0 0 var(--s3)}
+.card{border:1px solid var(--line);border-radius:3px;background:var(--surface);padding:var(--s3) var(--s4);margin-bottom:var(--s2);cursor:pointer;transition:border-color var(--micro) var(--ease),background-color var(--micro) var(--ease)}
+.card:hover{border-color:var(--rule);background:var(--raised)}
+.card.on{border-color:var(--blue)}
+.card h3{font:700 14px/1.4 var(--serif);color:var(--heading);margin:0;display:flex;align-items:baseline;gap:var(--s2)}
+.card h3 .tag{margin-left:auto;font:400 9px/1 var(--mono);color:var(--faint);letter-spacing:.04em}
+.card h3 .tag.grow{color:var(--ember-text)}
+.card p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.card .fields{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+.card .fields i{font:400 9.5px/1 var(--mono);font-style:normal;color:var(--text);border:1px solid var(--line);border-radius:2px;padding:4px 7px;background:var(--bg)}
+.card .fields i.no{color:var(--faint);text-decoration:line-through;border-style:dashed}
+
+.center{border:1px solid var(--line);border-radius:3px;background:var(--surface);padding:var(--s4) var(--s5)}
+.center h2{font:700 15px/1.4 var(--serif);color:var(--heading);margin:0 0 2px}
+.center .note{font:400 11.5px/1.6 var(--serif);font-style:italic;color:var(--muted);margin:0 0 var(--s3)}
+.kgroup{margin-bottom:var(--s3)}
+.kgroup .kk{font:400 11px/1.6 var(--serif);font-style:italic;color:var(--faint);margin-bottom:4px}
+.kinds{display:flex;flex-wrap:wrap;gap:5px}
+.kind{font:500 9.5px/1 var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:2px;color:var(--blue-text);background:var(--bg);cursor:pointer}
+.kind:hover{border-color:var(--rule)}
+.kind.m{color:var(--ember-text);border-style:dashed}
+.kind.on{border-color:var(--blue)}
+.flow{margin-top:var(--s3);border-top:1px solid var(--line);padding-top:var(--s3);font:400 10px/2 var(--mono);color:var(--muted);overflow-x:auto;white-space:pre}
+.flow b{color:var(--heading);font-weight:500}
+.flow .em{color:var(--ember-text)}
+.flow .bl{color:var(--blue-text)}
+
+.fold{border-top:1px solid var(--line);padding:var(--s2) 0}
+.fold:first-of-type{border-top:none;padding-top:0}
+.fold b{font:600 12.5px/1.5 var(--serif);color:var(--heading)}
+.fold span{display:block;font-size:11.5px;color:var(--muted)}
+.fold .fm{font:400 9.5px/1.6 var(--mono);color:var(--faint)}
+.never{border:1px dashed var(--ember);border-radius:3px;padding:var(--s3) var(--s4);margin-top:var(--s2)}
+.never b{font:600 12px/1.5 var(--serif);color:var(--ember-text)}
+.never p{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+
+.pane{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--line);
+  transform:translateX(103%);transition:transform var(--dur) var(--ease);z-index:9;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.pane.on{transform:none}
+.phead{display:flex;align-items:center;padding:var(--s4) var(--s5);border-bottom:1px solid var(--line)}
+.phead .pk{font:400 11px/1.4 var(--serif);font-style:italic;color:var(--ember-text)}
+.phead button{margin-left:auto;font:400 11px/1 var(--serif);color:var(--faint);background:none;border:1px solid var(--line);border-radius:3px;padding:6px 11px;min-height:30px}
+.pbody{flex:1;overflow-y:auto;padding:var(--s5)}
+.pbody h3{font:700 19px/1.3 var(--serif);color:var(--heading);margin:0 0 var(--s2)}
+.pbody p{margin:0 0 var(--s3);font-size:13px;max-width:56ch}
+.pbody .csect{font:400 12px/1.6 var(--serif);font-style:italic;color:var(--ember-text);border-bottom:1px solid var(--line);padding-bottom:4px;margin:var(--s4) 0 var(--s2)}
+.frow{display:flex;gap:var(--s3);border-top:1px solid var(--line);padding:7px 0;font-size:12px}
+.frow:first-of-type{border-top:none}
+.frow code{font:400 10px/1.6 var(--mono);color:var(--blue-text);flex:0 0 128px}
+.frow span{color:var(--muted)}
+.fine{font:400 11px/1.7 var(--serif);font-style:italic;color:var(--faint);max-width:52ch}
+.scrim{position:fixed;inset:0;background:transparent;z-index:8;display:none}
+.scrim.on{display:block}
+footer{margin-top:var(--s5);border-top:1px solid var(--line);padding-top:var(--s3);font:400 11px/1.7 var(--serif);font-style:italic;color:var(--faint);max-width:90ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>The Daybook · Schema</h1>
+    <span class="sub">v1, aligned to beta v3, amended by D-01 and D-03 · one growing table; every view a fold · unadopted</span>
+    <button class="mode" id="mode">light</button>
+  </header>
+  <p class="lede">Five relations, and only one of them grows. <b>Everything else is identity, vocabulary, or computation.</b> The CIS is the single source of truth; the app holds no data of its own. Select any relation or event kind for its detail. Lettering follows the interface rule: the human voice in serif, the record's grammar in mono.</p>
+
+  <div class="grid">
+    <div>
+      <div class="sect">the five relations</div>
+      <div class="card" data-rel="agents"><h3>agents<span class="tag">identity · CIS</span></h3>
+        <p>Everyone who acts. All of them are people — the reader is not a row here.</p>
+        <div class="fields"><i>id</i><i>name</i><i class="no">class</i></div></div>
+      <div class="card" data-rel="events"><h3>events<span class="tag grow">the one growing table</span></h3>
+        <p>Appended, never edited. The journal, the audit, and the reader's curriculum are all this table.</p>
+        <div class="fields"><i>id</i><i>at</i><i>agent_id</i><i>kind</i><i>body</i><i>about_event_id</i><i>address</i><i class="no">updated_at</i></div></div>
+      <div class="card" data-rel="edges"><h3>edges<span class="tag">weave</span></h3>
+        <p>How writing becomes relationship: mentions and citations, addressable.</p>
+        <div class="fields"><i>from_event</i><i>rel</i><i>to</i></div></div>
+      <div class="card" data-rel="threads"><h3>threads<span class="tag">identity only</span></h3>
+        <p>A row exists only once a member names it. No state column anywhere.</p>
+        <div class="fields"><i>id</i><i>name</i><i>named_by</i><i class="no">state</i></div></div>
+      <div class="card" data-rel="terms"><h3>terms<span class="tag">vocabulary</span></h3>
+        <p>The lexicon — the members' language, and the reader's dictionary, on loan.</p>
+        <div class="fields"><i>term</i><i>first_event_id</i></div></div>
+    </div>
+
+    <div class="center">
+      <h2>The event grammar</h2>
+      <p class="note">eighteen kinds · every one of them written by a member · the reader writes none</p>
+      <div class="kgroup"><div class="kk">writing</div><div class="kinds">
+        <button class="kind" data-k="entry.written">entry.written</button></div></div>
+      <div class="kgroup"><div class="kk">the reader proposes, the member disposes — and only the disposing is a record</div><div class="kinds">
+        <button class="kind m" data-k="staged.proposal">a staged proposal · not a kind</button>
+        <button class="kind" data-k="inference.confirmed">inference.confirmed</button>
+        <button class="kind" data-k="inference.corrected">inference.corrected</button></div></div>
+      <div class="kgroup"><div class="kk">threads, member-kept</div><div class="kinds">
+        <button class="kind" data-k="thread.named">thread.named</button>
+        <button class="kind" data-k="thread.joined">thread.joined</button>
+        <button class="kind" data-k="thread.merged">thread.merged</button>
+        <button class="kind" data-k="thread.split">thread.split</button>
+        <button class="kind" data-k="thread.rested">thread.rested</button></div></div>
+      <div class="kgroup"><div class="kk">what the record owes the future</div><div class="kinds">
+        <button class="kind" data-k="question.owned">question.owned</button>
+        <button class="kind" data-k="question.resolved">question.resolved</button>
+        <button class="kind" data-k="wager.sealed">wager.sealed</button>
+        <button class="kind" data-k="wager.resolved">wager.resolved</button>
+        <button class="kind" data-k="contest.filed">contest.filed</button></div></div>
+      <div class="kgroup"><div class="kk">the room and the demo</div><div class="kinds">
+        <button class="kind" data-k="gathering.held">gathering.held</button>
+        <button class="kind" data-k="demo.promised">demo.promised</button>
+        <button class="kind" data-k="demo.reported">demo.reported</button></div></div>
+      <div class="kgroup"><div class="kk">review and keeping</div><div class="kinds">
+        <button class="kind" data-k="rereading.held">rereading.held</button>
+        <button class="kind" data-k="curation.shelved">curation.shelved</button></div></div>
+      <div class="flow"><b>the pipeline, whole</b>
+
+entry.written ─▶ <span class="em">reader</span> ─▶ <span class="em">staged, outside the record</span> ─▶ member act ─▶ <b>the member's row</b> ─▶ CIS
+                    │                                   │
+                    └────── learns from ◀─ corrections ─┘
+
+<span class="bl">visible(agent, record) = f(role, record class, governing §)</span>
+the reader proposes · the member disposes · the map governs · the log teaches
+no instrument holds a write grant of its own — authority map §7</div>
+    </div>
+
+    <div>
+      <div class="sect">every view is a fold</div>
+      <div class="fold"><b>Journal</b><span>entries joined to their latest inference chain; every prior assertion remains.</span><span class="fm">entry.written ⋈ inference.*</span></div>
+      <div class="fold"><b>People</b><span>mention and citation edges folded pairwise around the viewer.</span><span class="fm">edges ⋈ agents</span></div>
+      <div class="fold"><b>Threads</b><span>named threads plus membership events; forming = a staged inference, rendered dashed, and not in the record until named.</span><span class="fm">threads ⋈ thread.* </span></div>
+      <div class="fold"><b>The Open</b><span>owned-not-resolved, sealed-not-resolved, filed-not-carried.</span><span class="fm">question.* · wager.* · contest.*</span></div>
+      <div class="fold"><b>Gatherings</b><span>rooms and demos, with what each left rooted by about-chain.</span><span class="fm">gathering.held · demo.*</span></div>
+      <div class="fold"><b>Words</b><span>terms with usage counts and distinct voices — shared vs one-voice is computed, never assigned.</span><span class="fm">terms ⋈ entry.written</span></div>
+      <div class="fold"><b>Your Share</b><span>the viewer's own events, folded. Another member's share is unqueryable, not merely unshown.</span><span class="fm">events WHERE agent = viewer · RLS</span></div>
+      <div class="sect" style="margin-top:var(--s4)">deliberately not stored</div>
+      <div class="never"><b>No table for:</b><p>obligations (The Open is a fold) · balances or shares · thread state · notification queues · training weights — the reader's curriculum <i>is</i> the correction log, so what trained it on your writing stays a query, not a mystery. Scoped impersonation bounds that to your own record; wider disclosure of corrections is a question filed with the authority map, not a promise made here.</p></div>
+    </div>
+  </div>
+
+  <footer>Companion to daybook-beta-v3.html, DAYBOOK_BETA.md v3, and READERS_INSTRUCTIONS.md v3, amended by decisions D-01 and D-03 in DAYBOOK_DECISIONS.md. Drafted August 2026 with machine assistance and labeled as such; the grouping of event kinds and the fold notation are interpretive and contestable. Nothing here changes the CIS: this document describes, the members adopt.</footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="pane" id="pane" role="dialog" aria-modal="true">
+  <div class="phead"><span class="pk" id="pk">detail</span><button id="pclose">release · esc</button></div>
+  <div class="pbody" id="pbody"></div>
+</aside>
+
+<script>
+(function(){
+"use strict";
+var mode=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+function applyMode(m){mode=m;document.documentElement.setAttribute('data-mode',m);document.getElementById('mode').textContent=m==='dark'?'light':'dark'}
+applyMode(mode);
+document.getElementById('mode').addEventListener('click',function(){applyMode(mode==='dark'?'light':'dark')});
+
+var REL={
+agents:{t:'agents',k:'identity · lives in the CIS',p:'Everyone who can act, and all of them are people. The Daybook adds nothing to the CIS agents relation — not even a class, since membership class lives on the membership row and appointments in role_grants (authority map §3). The reader is not a row here at all: §3 Law X and §7 give the runtime instrument no role and no grant, so it holds none (D-01).',
+ f:[['id','stable identity, CIS-issued'],['name','how members write each other']],
+ fine:'"The member has the last word" is not a fence around a machine writer. It is the plain fact that every row in events was written by a member, because the reader cannot write at all.'},
+events:{t:'events',k:'the one growing table',p:'The journal itself. Rows are appended and never edited — there is no updated_at because nothing updates. A correction is a new row about the old one, which is why the record can testify: the mistake and its repair are both permanently on file, in order.',
+ f:[['id · at','sequence and time of append'],['agent_id','who acted. Always a member; the reader never appears here'],['kind','one of the eighteen kinds'],['body','the entry text, or the payload the kind needs: a proposed type with its reasons, sealed criteria as a hash, a warrant. Reasons are stored member-legible, never only a score.'],['about_event_id','the chain: confirmation or correction → entry, resolution → wager. The chain is the audit.'],['address','the citable §-address, assigned at append, permanent. In the interface it is the frank.']],
+ fine:'Every view in the app is a fold over this table. So is the reader\u2019s curriculum. So is any future dispute.'},
+edges:{t:'edges',k:'the weave',p:'How writing becomes relationship. When an entry names a person, a mention edge makes it addressable; when it cites an address, a citation edge carries weight because addresses never move. The People view is nothing but these edges, folded.',
+ f:[['from_event','the writing that did the weaving'],['rel','mentions (event → agent, resolved or candidate) · cites (event → address)'],['to','the agent or address woven to']],
+ fine:'The reader may stage a mention with candidates but never resolves an ambiguous person — a wrong weave is a claim about two humans, and those claims are not the machine\u2019s to make.'},
+threads:{t:'threads',k:'identity only',p:'A thread exists as a row only from the moment a member names it. Before that, a forming thread is merely an unconfirmed inference in events — the reader\u2019s hunch, dashed, waiting. There is no state column: alive, dormant, and membership are all computed from events.',
+ f:[['id','stable identity'],['name','always a member\u2019s words — the reader never names'],['named_by','provenance of the frame']],
+ fine:'Threads are proto-projects: a mature one can be shared into the open world as a project by reference, its entries becoming the project\u2019s provenance. Flagged for pressure-testing against the STANDING constraint.'},
+terms:{t:'terms',k:'vocabulary',p:'The lexicon. A word joins by use, not decree; voices, counts, and spread are folds over entries. This is also the reader\u2019s dictionary — the members\u2019 language on loan to the machine, and inspectable in the Words view whenever the reader leans on a term to classify.',
+ f:[['term','the word or phrase itself'],['first_event_id','where it entered the record — coinage has an address']],
+ fine:'Shared versus one-voice is computed, never assigned. Nobody owns a word; the record just remembers who reached for it first.'}
+};
+var KIND={
+'staged.proposal':['Not an event and not a kind — shown here because the interface shows it. The reader\u2019s single power: a staged proposal carrying a type, at most one thread, and reasons in member-legible terms. It lives under the asking member\u2019s own identity in a staging relation that is not a record class: no address, no append, freely dropped (D-03). It enters the record only inside the member\u2019s confirmation or correction of it.','the reader · staged, never appended'],
+'entry.written':['A member writes. The only kind that carries free text as its primary payload; everything else in the system is about rows of this kind, directly or by chain.','member'],
+'inference.confirmed':['A member accepts a staged proposal, and that acceptance is the row: the proposal travels into its body as provenance. Weighed lightly in the curriculum — a reflex tap is indistinguishable from judgment.','member'],
+'inference.corrected':['A member overrides, ideally with reasons, and carries the rejected proposal verbatim in the body — otherwise a refused proposal would leave no trace, since proposals never append. The strongest training signal, and the reader\u2019s entire curriculum is the log of these.','member'],
+'thread.named':['A member gives a forming weave its name. Naming sets the frame, and frames belong to members.','member'],
+'thread.joined':['An entry joins a thread by member act. Entries may live in more than one thread.','member'],
+'thread.merged':['Two threads found to be one conversation. Both histories remain; the merge is itself on record.','member'],
+'thread.split':['One thread found to be two. The split is a member\u2019s reading, recorded with its reasons.','member'],
+'thread.rested':['A member lays a thread down deliberately. Dormant is computed; rested is chosen.','member'],
+'question.owned':['A question given an owner and standing in The Open. Ownership is care, not assignment.','member'],
+'question.resolved':['An answer entered with warrant — a new entry, chained to the question it closes.','member'],
+'wager.sealed':['Terms fixed at entry as a hash, counterparties named, resolution date set. The seal is what makes the later reading honest.','member'],
+'wager.resolved':['The outcome entered either way — wins and losses are the same kind of row.','member'],
+'contest.filed':['The cord\u2019s output: a member\u2019s standing to interrupt how the group works, carried to the room. Not a complaint; a governance act.','member'],
+'gathering.held':['A room happened. What it left — decisions, re-ownings, entries — chains back to it by address.','member'],
+'demo.promised':['Claims staked before an audience exists to forgive them.','member'],
+'demo.reported':['What actually happened, chained to the promise. Judged as work, not persons.','member'],
+'rereading.held':['A member sat with their own recent entries and the reader\u2019s inferences beside them. The training room\u2019s receipt.','member'],
+'curation.shelved':['A body of work placed on the shelf deliberately — kept, not abandoned.','member']
+};
+var pane=document.getElementById('pane'),pbody=document.getElementById('pbody'),pk=document.getElementById('pk'),scrim=document.getElementById('scrim');
+function open(kick,html){pk.textContent=kick;pbody.innerHTML=html;pbody.scrollTop=0;pane.classList.add('on');scrim.classList.add('on')}
+function close(){pane.classList.remove('on');scrim.classList.remove('on');
+  document.querySelectorAll('.card.on,.kind.on').forEach(function(x){x.classList.remove('on')})}
+document.getElementById('pclose').addEventListener('click',close);
+scrim.addEventListener('click',close);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+
+document.querySelectorAll('[data-rel]').forEach(function(c){
+  c.addEventListener('click',function(){
+    document.querySelectorAll('.card.on').forEach(function(x){x.classList.remove('on')});
+    c.classList.add('on');
+    var r=REL[c.dataset.rel];
+    open('relation','<h3>'+r.t+'</h3><p class="fine" style="margin-bottom:12px">'+r.k+'</p><p>'+r.p+'</p>'
+      +'<div class="csect">fields</div>'
+      +r.f.map(function(f){return '<div class="frow"><code>'+f[0]+'</code><span>'+f[1]+'</span></div>'}).join('')
+      +'<div class="csect">worth knowing</div><p class="fine">'+r.fine+'</p>');
+  });
+});
+document.querySelectorAll('[data-k]').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.kind.on').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    var k=KIND[b.dataset.k];
+    open('event kind','<h3 style="font-family:var(--mono);font-size:15px">'+b.dataset.k+'</h3>'
+      +'<p class="fine" style="margin-bottom:12px">written by: '+k[1]+'</p><p>'+k[0]+'</p>'
+      +(b.dataset.k.indexOf('inference')===0||b.dataset.k.indexOf('staged')===0?'<div class="csect">the constraint</div><p class="fine">The reader writes nothing. It has no row in agents, no role, and no grant, so it structurally cannot enter, confirm, name, or resolve \u2014 and nothing it produces is in the record until a member makes it so. The member\u2019s last word is not a fence around a machine writer; it is that there is no machine writer (D-01).</p>':''));
+  });
+});
+})();
+</script>
+</body>
+</html>
