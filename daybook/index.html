@@ -91,6 +91,8 @@ input,textarea{font-family:var(--serif)}
 }
 .rail .write:hover{opacity:.92}
 .rail .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:var(--s3)}
+.sess{font:400 9.5px/1.6 var(--mono);color:var(--faint);margin:0 0 8px;letter-spacing:.02em;overflow-wrap:anywhere}
+body.on-record .seedonly{display:none}
 .rail .foot .rbtn{font-size:12px;padding:6px 10px;min-height:30px}
 .rail .cord{
   display:block;width:100%;text-align:left;font:400 11.5px/1.5 var(--serif);font-style:italic;
@@ -366,8 +368,9 @@ body.guest .guestbar{display:flex}
       <button class="rbtn" id="railReread">Rereading</button>
     </div>
     <div class="foot">
-      <p style="margin:0 0 8px;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Demonstration seed. Every entry, wager, question and disagreement below is invented for this prototype. The names are real members of the cooperative; none of the writing attributed to them is theirs.</p>
-      <p style="margin:0 0 8px;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Public beta, unadopted and undeployed. Everything here lives in memory and is gone on reload — nothing persists, nothing syncs, nothing touches the record. The reader is a word-pattern stand-in for the live one.</p>
+      <p class="sess" id="sessLine">this session · in memory</p>
+      <p class="seedonly" style="margin:0 0 8px;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Illustrative seed. Every name, entry, wager, question and disagreement below is invented for this beta; none of it is the record, and none of the people are members of the cooperative. In memory, it is gone on reload.</p>
+      <p style="margin:0 0 8px;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Public beta, unadopted. Signed in at the shell, this page reads and appends the beta relations of the record under your own name; otherwise it stays in memory. The reader is a word-pattern stand-in for the live one.</p>
       <button class="rbtn" id="railMethod">the method</button>
       <button class="rbtn" id="railLog">the record itself</button>
       <button class="rbtn g-hide" id="railGuest">view as guest</button>
@@ -382,7 +385,7 @@ body.guest .guestbar{display:flex}
       <button class="qbtn" id="mMode">light</button>
     </div>
     <div class="guestbar" id="guestbar">
-      <b>reading as a guest</b><span>The record, as members have confirmed it. Writing is what membership is. This is a public beta on an invented demonstration seed, in memory only — not the record.</span>
+      <b>reading as a guest</b><span>The record, as members have confirmed it. Writing is what membership is. This is a public beta; the rail's foot says whether this session is in memory or on the record.</span>
       <button class="qbtn" id="leaveGuest">member view</button>
     </div>
 
@@ -390,7 +393,7 @@ body.guest .guestbar{display:flex}
       <div class="inlinepen">
         <textarea class="pen" id="penInline" placeholder="Write what happened, what you wonder, what you'd bet on."></textarea>
         <div class="penrow">
-          <span class="stamp">Todd · today · kept in the record</span>
+          <span class="stamp" id="stampInline">· today · kept in the record</span>
           <button class="enter" id="enterInline">Enter</button>
         </div>
         <button class="cordline" id="cordInline">something is wrong with how we're working</button>
@@ -469,51 +472,160 @@ body.guest .guestbar{display:flex}
 "use strict";
 /* engine: identical schema to v2 — one growing log, views as folds */
 /* D-01: the reader is not an agent row and holds no grant. It writes nothing. */
-var agents={todd:{id:'todd',name:'Todd',cls:'member'},aaron:{id:'aaron',name:'Aaron',cls:'member'},kevin:{id:'kevin',name:'Kevin',cls:'member'},lucien:{id:'lucien',name:'Lucien',cls:'member'},jo:{id:'jo',name:'Jo',cls:'member'}};
-var VIEWER='todd',TYPES=['note','question','wager','demo','close','contest'];
+var agents={};
+var VIEWER=null,TYPES=['note','question','wager','demo','close','contest'];
 var events=[],nextAddr=1;
+/* ev(): the local append. The seed and the in-memory adapter use it directly; the
+   CIS adapter uses it only to mirror a row the record has already accepted. */
 function ev(agent,kind,body,about,ago,label){var e={id:events.length+1,addr:'\u00a7'+(nextAddr++),agent:agent,kind:kind,body:body||{},about:about||null,ago:ago,when:label||'just now'};events.push(e);return e}
 function findByAddr(a){return events.find(function(e){return e.addr===a})}
+
+/* persistence seam (build order, layer 2). One interface, two adapters.
+   In memory is the default. The CIS adapter is chosen only when the shell's session
+   exists in this origin AND beta_events answers to it; the probe runs once per page
+   load and any failure falls back, silently in the code and visibly in the rail.
+   The record is never cached: these requests are cross-origin, and sw.js passes them.
+   Relations: techne.coop supabase/migrations/0040_daybook_beta.sql (beta_ prefix, not
+   a record class). Every row is the member's own: agent_id is the viewer, always. */
+var CIS_URL='https://ujujwgopdwirebgcpekc.supabase.co';
+var CIS_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqdWp3Z29wZHdpcmViZ2NwZWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODc3ODIsImV4cCI6MjA5OTM2Mzc4Mn0.v6atltp9vbEj0RN2stSuDrzOdWVHB9GGR6rwPCwBNEk';
+var CIS_TOKEN_KEY='sb-ujujwgopdwirebgcpekc-auth-token';
+var store={mode:'memory',why:'not signed in',session:null,byUuid:{},last:null};
+function cisSession(){
+  try{var t=JSON.parse(localStorage.getItem(CIS_TOKEN_KEY));
+    if(!t||!t.access_token||!t.user)return null;
+    if(t.expires_at&&t.expires_at*1000<Date.now()-60000)return null;
+    return t}catch(e){return null}
+}
+function cisFetch(path,opts){
+  opts=opts||{};
+  var h={apikey:CIS_ANON,Authorization:'Bearer '+store.session.access_token,'Content-Type':'application/json'};
+  if(opts.prefer)h.Prefer=opts.prefer;
+  return fetch(CIS_URL+'/rest/v1/'+path,{method:opts.method||'GET',headers:h,body:opts.body?JSON.stringify(opts.body):undefined,cache:'no-store'})
+    .then(function(r){if(!r.ok){var err=new Error(path+': '+r.status);err.status=r.status;throw err}return r.status===204?null:r.json()});
+}
+function daysAgo(iso){return Math.max(0,Math.floor((Date.now()-new Date(iso).getTime())/86400000))}
+function whenLabel(iso,ago){if(ago===0)return 'today';if(ago===1)return 'yesterday';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function fromRow(r){
+  var ago=daysAgo(r.at);
+  var e=ev(r.agent_id,r.kind,r.body||{},r.about_event_id?(store.byUuid[r.about_event_id]||null):null,ago,whenLabel(r.at,ago));
+  e.uuid=r.id;e.addr=r.address;e.at=r.at;store.byUuid[r.id]=r.address;return e;
+}
+function uuidOfAddr(addr){var e=addr?findByAddr(addr):null;return e&&e.uuid?e.uuid:null}
+function fallBack(why){store.mode='memory';store.why=why}
+/* select(): decide the adapter, once. Resolves in every case; never throws. */
+store.select=function(){
+  var s=cisSession();
+  if(!s){fallBack('not signed in');return Promise.resolve()}
+  store.session=s;
+  return cisFetch('agents?auth_user_id=eq.'+encodeURIComponent(s.user.id)+'&select=id,display_name').then(function(rows){
+    if(!rows||!rows.length)throw {why:'signed in, but no agent record'};
+    VIEWER=rows[0].id;agents[VIEWER]={id:VIEWER,name:rows[0].display_name||'you',cls:'member'};
+    return cisFetch('beta_events?select=id&limit=1');
+  }).then(function(){
+    return Promise.all([
+      cisFetch('agents?select=id,display_name&order=display_name.asc&limit=500'),
+      cisFetch('beta_events?select=id,at,agent_id,kind,body,about_event_id,address&order=at.asc,address.asc&limit=2000'),
+      cisFetch('beta_threads?select=id,name,named_by&order=named_at.asc'),
+      cisFetch('beta_terms?select=term&order=term.asc')
+    ]);
+  }).then(function(all){
+    all[0].forEach(function(a){agents[a.id]={id:a.id,name:a.display_name||a.id.slice(0,8),cls:'member'}});
+    all[1].forEach(fromRow);
+    threads=all[2].map(function(t){return {id:t.id,name:t.name,namedBy:t.named_by}});
+    terms=foldTerms(all[3].map(function(t){return t.term}));
+    store.mode='record';store.why='signed in as '+agents[VIEWER].name;
+  }).catch(function(err){
+    if(err&&err.why)return fallBack(err.why);
+    if(err&&err.status===404)return fallBack('signed in; the events relation is not on the record yet');
+    if(err&&(err.status===401||err.status===403))return fallBack('signed in; the record does not read for you');
+    fallBack('signed in; the record did not answer');
+  });
+};
+/* append(): the one door into the log. Resolves with the engine's event. In memory it
+   is synchronous under a promise; against the record it is the record's row mirrored,
+   address included, and nothing is shown until the record has accepted it. */
+store.append=function(agent,kind,body,about){
+  if(store.mode!=='record')return Promise.resolve(ev(agent,kind,body,about,0,'just now'));
+  var row={agent_id:VIEWER,kind:kind,body:body||{},about_event_id:uuidOfAddr(about)};
+  return cisFetch('beta_events',{method:'POST',body:row,prefer:'return=representation'}).then(function(rows){
+    var e=fromRow(rows[0]);e.ago=0;e.when='just now';
+    if(kind==='entry.written'){
+      var edges=(body.mentions||[]).map(function(m){return {from_event:e.uuid,rel:'mentions',to_agent:m}})
+        .concat((body.cites||[]).map(function(c){return {from_event:e.uuid,rel:'cites',to_address:c}}));
+      if(edges.length)cisFetch('beta_edges',{method:'POST',body:edges,prefer:'return=minimal'}).catch(function(){});
+    }
+    return e;
+  }).catch(function(err){refused(err);throw err});
+};
+store.nameThread=function(id,name){
+  if(store.mode!=='record'){threads.push({id:id,name:name,namedBy:VIEWER});return Promise.resolve()}
+  return cisFetch('beta_threads',{method:'POST',body:{id:id,name:name,named_by:VIEWER},prefer:'return=minimal'})
+    .then(function(){threads.push({id:id,name:name,namedBy:VIEWER})}).catch(function(err){refused(err);throw err});
+};
+function refused(err){store.last=err;renderSession('the record refused the append ('+(err&&err.status?err.status:'no answer')+') · nothing was written')}
+/* Words, against the record: a term joins by use (beta_terms); counts are folds. */
+function foldTerms(list){
+  return list.map(function(t){
+    var key=t.replace(/^the /,'').toLowerCase(),who={},uses=0;
+    events.forEach(function(e){if(e.kind==='entry.written'&&(e.body.text||'').toLowerCase().indexOf(key)>-1){uses++;who[e.agent]=1}});
+    var voices=Object.keys(who);
+    return {t:t,voices:voices.length,uses:uses,one:voices.length===1?nameOf(voices[0]):undefined};
+  });
+}
+/* corrections given, as a fold over the record plus the seed's remembered tally */
+function corrCount(id){return events.filter(function(e){return e.agent===id&&e.kind==='inference.corrected'}).length+(corrTally[id]||0)}
+function renderSession(msg){
+  var line=(store.mode==='record'?'this session · the record · ':'this session · in memory · ')+(msg||store.why);
+  ['sessLine','sessMore'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=line});
+  document.body.classList.toggle('on-record',store.mode==='record');
+  var st=nameOf(VIEWER)+' · today · kept in the record';
+  var s1=document.getElementById('stampInline');if(s1)s1.textContent=st;
+}
 /* D-03: staging. Not the record — no agent, no kind, no address, freely dropped.
    Held under the viewer's own identity; nothing here has entered events. */
 var staged=[],nextStage=1;
 function stage(body,about,ago){var p={sid:nextStage++,body:body||{},about:about||null,ago:ago};staged.push(p);return p}
 function stagedFor(addr){for(var i=staged.length-1;i>=0;i--){if(staged[i].about===addr&&!staged[i].body.forming)return staged[i]}return null}
 function unstage(addr){staged=staged.filter(function(p){return !(p.about===addr&&!p.body.forming)})}
-var threads=[{id:'treasury',name:'the treasury thread',namedBy:'lucien'},{id:'measure',name:'the onboarding measure',namedBy:'kevin'},{id:'threshold',name:'the guest threshold',namedBy:'aaron'}];
-var terms=[{t:'the close',voices:6,uses:31},{t:'the pen',voices:5,uses:24},{t:'warrant',voices:4,uses:19},{t:'the threshold',voices:4,uses:17},{t:'provenance',voices:3,uses:12},{t:'reconciliation',voices:1,uses:8,one:'Lucien'},{t:'the fold',voices:1,uses:6,one:'Todd'},{t:'the weaving',voices:3,uses:4,fresh:'coined by Jo \u00b7 spreading'}];
-var E={};
-E.tnote=ev('todd','entry.written',{text:'Reconciled the share ledger against the patronage entries. The fold and the treasury\u2019s books agree, which is the point of having one record.',type:'note',thread:'treasury',mentions:[]},null,24,'3 weeks ago');
+var threads=[],terms=[],corrTally={},E={};
+function seedDemo(){
+VIEWER='ines';
+agents={ines:{id:'ines',name:'Ines',cls:'member'},bram:{id:'bram',name:'Bram',cls:'member'},cass:{id:'cass',name:'Cass',cls:'member'},lior:{id:'lior',name:'Lior',cls:'member'},wren:{id:'wren',name:'Wren',cls:'member'}};
+threads=[{id:'treasury',name:'the treasury thread',namedBy:'lior'},{id:'measure',name:'the onboarding measure',namedBy:'cass'},{id:'threshold',name:'the guest threshold',namedBy:'bram'}];
+terms=[{t:'the close',voices:6,uses:31},{t:'the pen',voices:5,uses:24},{t:'warrant',voices:4,uses:19},{t:'the threshold',voices:4,uses:17},{t:'provenance',voices:3,uses:12},{t:'reconciliation',voices:1,uses:8,one:'Lior'},{t:'the fold',voices:1,uses:6,one:'Ines'},{t:'the weaving',voices:3,uses:4,fresh:'coined by Wren \u00b7 spreading'}];
+E.tnote=ev('ines','entry.written',{text:'Reconciled the share ledger against the patronage entries. The fold and the treasury\u2019s books agree, which is the point of having one record.',type:'note',thread:'treasury',mentions:[]},null,24,'3 weeks ago');
 stage({type:'note',thread:'treasury',reason:'uses \u201creconciled\u201d and \u201cledger\u201d, terms this thread owns'},E.tnote.addr,24);
-ev('todd','inference.confirmed',{},E.tnote.addr,24);
-E.lcite=ev('lucien','entry.written',{text:'{todd}\u2019s treasury note saved me an hour of reconstruction. Citing it here.',type:'note',thread:'treasury',mentions:['todd'],cites:[E.tnote.addr]},null,21,'3 weeks ago');
-ev('lucien','inference.confirmed',{},E.lcite.addr,21);
-E.rq=ev('aaron','entry.written',{text:'What if the reading surface for guests was just the last thirty confirmed entries? No navigation, no explanation.',type:'question',thread:null,mentions:[]},null,8,'last week');
-ev('aaron','inference.confirmed',{},E.rq.addr,8);
-E.kcon=ev('kevin','entry.written',{text:'Contest: speed of completion selects for speed, not capability. The measure is examined before the trial runs.',type:'contest',thread:'measure',mentions:[]},null,7,'last week');
-ev('kevin','inference.confirmed',{},E.kcon.addr,7);
-ev('kevin','contest.filed',{what:'the trial measure',carried:'Wednesday close \u00b7 week 36'},E.kcon.addr,7,'last week');
-ev('aaron','question.owned',{q:'Where does the guest threshold sit?',owner:'Aaron, with members',thread:'threshold'},null,21,'open 3 weeks');
-ev('todd','question.owned',{q:'What may judge the onboarding trial?',owner:'Todd, with members',thread:'measure'},null,14,'open 2 weeks');
-E.close35=ev('todd','gathering.held',{what:'Wednesday close \u00b7 week 35',left:'1 decision with warrant \u00b7 1 question re-owned \u00b7 2 entries'},null,5,'Aug 26');
-E.demoP=ev('todd','demo.promised',{what:'Launch follow-up demo',claims:'capture, chips, the day lens'},null,11,'Aug 20');
-ev('todd','demo.reported',{status:'shown \u00b7 two claims failed \u00b7 one contest filed'},E.demoP.addr,10,'Aug 21');
-E.wclose=ev('todd','entry.written',{text:'Wednesday room went long. {kevin} kept us honest about the measure before anyone ran the trial.',type:'close',thread:'measure',mentions:['kevin']},null,5,'Wednesday');
+ev('ines','inference.confirmed',{},E.tnote.addr,24);
+E.lcite=ev('lior','entry.written',{text:'{ines}\u2019s treasury note saved me an hour of reconstruction. Citing it here.',type:'note',thread:'treasury',mentions:['ines'],cites:[E.tnote.addr]},null,21,'3 weeks ago');
+ev('lior','inference.confirmed',{},E.lcite.addr,21);
+E.rq=ev('bram','entry.written',{text:'What if the reading surface for guests was just the last thirty confirmed entries? No navigation, no explanation.',type:'question',thread:null,mentions:[]},null,8,'last week');
+ev('bram','inference.confirmed',{},E.rq.addr,8);
+E.kcon=ev('cass','entry.written',{text:'Contest: speed of completion selects for speed, not capability. The measure is examined before the trial runs.',type:'contest',thread:'measure',mentions:[]},null,7,'last week');
+ev('cass','inference.confirmed',{},E.kcon.addr,7);
+ev('cass','contest.filed',{what:'the trial measure',carried:'Wednesday close \u00b7 week 36'},E.kcon.addr,7,'last week');
+ev('bram','question.owned',{q:'Where does the guest threshold sit?',owner:'Bram, with members',thread:'threshold'},null,21,'open 3 weeks');
+ev('ines','question.owned',{q:'What may judge the onboarding trial?',owner:'Ines, with members',thread:'measure'},null,14,'open 2 weeks');
+E.close35=ev('ines','gathering.held',{what:'Wednesday close \u00b7 week 35',left:'1 decision with warrant \u00b7 1 question re-owned \u00b7 2 entries'},null,5,'Aug 26');
+E.demoP=ev('ines','demo.promised',{what:'Launch follow-up demo',claims:'capture, chips, the day lens'},null,11,'Aug 20');
+ev('ines','demo.reported',{status:'shown \u00b7 two claims failed \u00b7 one contest filed'},E.demoP.addr,10,'Aug 21');
+E.wclose=ev('ines','entry.written',{text:'Wednesday room went long. {cass} kept us honest about the measure before anyone ran the trial.',type:'close',thread:'measure',mentions:['cass']},null,5,'Wednesday');
 stage({type:'close',thread:'measure',reason:'names the Wednesday room; \u201cthe measure\u201d is this thread\u2019s own term'},E.wclose.addr,5);
-ev('todd','inference.confirmed',{},E.wclose.addr,5);
-E.wager=ev('todd','entry.written',{text:'I bet {aaron} that if practice notes ship with the next update, support questions drop by half. He took it.',type:'wager',thread:null,mentions:['aaron']},null,1,'yesterday');
-ev('todd','inference.confirmed',{},E.wager.addr,1);
-ev('todd','wager.sealed',{terms:'support questions in the fortnight after release \u003c 50% of last cycle',hash:'sha-9f2c\u2026 sealed yesterday',counterparty:'aaron',resolves:'Oct 1'},E.wager.addr,1,'yesterday');
-E.aq=ev('aaron','entry.written',{text:'{todd} and I disagree about where the guest threshold sits. Logging it here so we argue it in the open.',type:'question',thread:'threshold',mentions:['todd']},null,1,'yesterday');
-stage({type:'question',thread:'threshold',reason:'ends open-ended; \u201cthe threshold\u201d is this thread\u2019s own term; names Todd, who is in it'},E.aq.addr,1);
-E.jform=ev('jo','entry.written',{text:'The record should introduce itself. No navigation, no explanation \u2014 the weaving shows itself.',type:'note',thread:null,mentions:[]},null,0,'today');
+ev('ines','inference.confirmed',{},E.wclose.addr,5);
+E.wager=ev('ines','entry.written',{text:'I bet {bram} that if practice notes ship with the next update, support questions drop by half. They took it.',type:'wager',thread:null,mentions:['bram']},null,1,'yesterday');
+ev('ines','inference.confirmed',{},E.wager.addr,1);
+ev('ines','wager.sealed',{terms:'support questions in the fortnight after release \u003c 50% of last cycle',hash:'sha-9f2c\u2026 sealed yesterday',counterparty:'bram',resolves:'Oct 1'},E.wager.addr,1,'yesterday');
+E.aq=ev('bram','entry.written',{text:'{ines} and I disagree about where the guest threshold sits. Logging it here so we argue it in the open.',type:'question',thread:'threshold',mentions:['ines']},null,1,'yesterday');
+stage({type:'question',thread:'threshold',reason:'ends open-ended; \u201cthe threshold\u201d is this thread\u2019s own term; names Ines, who is in it'},E.aq.addr,1);
+E.jform=ev('wren','entry.written',{text:'The record should introduce itself. No navigation, no explanation \u2014 the weaving shows itself.',type:'note',thread:null,mentions:[]},null,0,'today');
 stage({type:'note',thread:null,reason:'no question mark, no stake named'},E.jform.addr,0);
 stage({forming:['reading surface',E.rq.addr,E.jform.addr],reason:'shares \u201creading surface\u201d words and a span of days with '+E.rq.addr+' \u00b7 no member\u2019s hand yet'},E.jform.addr,0);
-E.walk=ev('todd','entry.written',{text:'Walked {jo} through the pen today \u2014 her first entries are already sharper questions than my early notes were.',type:'note',thread:'threshold',mentions:['jo']},null,0,'today');
-stage({type:'note',thread:'threshold',reason:'uses \u201cthe pen\u201d and \u201cwalkthrough\u201d; names Jo; a day after '+E.aq.addr},E.walk.addr,0);
-ev('aaron','inference.corrected',{was:'note',now:'question',reason:'it asks, even without the mark'},E.rq.addr,8);
-ev('kevin','inference.corrected',{was:'note',now:'contest',reason:'it interrupts, it doesn\u2019t observe'},E.kcon.addr,7);
-var corrTally={aaron:14,kevin:9,todd:4,lucien:2,jo:1};
+E.walk=ev('ines','entry.written',{text:'Walked {wren} through the pen today \u2014 their first entries are already sharper questions than my early notes were.',type:'note',thread:'threshold',mentions:['wren']},null,0,'today');
+stage({type:'note',thread:'threshold',reason:'uses \u201cthe pen\u201d and \u201cwalkthrough\u201d; names Wren; a day after '+E.aq.addr},E.walk.addr,0);
+ev('bram','inference.corrected',{was:'note',now:'question',reason:'it asks, even without the mark'},E.rq.addr,8);
+ev('cass','inference.corrected',{was:'note',now:'contest',reason:'it interrupts, it doesn\u2019t observe'},E.kcon.addr,7);
+corrTally={bram:14,cass:9,ines:4,lior:2,wren:1};
+}
 
 function latestAssertion(entry){
   var chain=events.filter(function(e){return e.about===entry.addr&&/^inference\./.test(e.kind)});
@@ -560,7 +672,7 @@ function foldShare(v){
 /* chrome state */
 var guest=false,lensMode='stream',drafts={main:'',cord:false},scrollPos={},flashChip=null,flashInk=null,frankId=null,firstPaint=true;
 function nameOf(id){return agents[id]?agents[id].name:id}
-function linkNames(s){return s.replace(/\{(\w+)\}/g,function(_,id){return '<span class="mn" data-p="'+id+'">'+nameOf(id)+'</span>'})}
+function linkNames(s){return s.replace(/\{([\w-]+)\}/g,function(_,id){return '<span class="mn" data-p="'+id+'">'+nameOf(id)+'</span>'})}
 function threadName(tid){var t=threads.find(function(x){return x.id===tid});return t?t.name:null}
 
 var VIEWS=['journal','people','threads','open','gather','words','share'];
@@ -618,7 +730,7 @@ function openComposer(opts){
     '<h3>'+(isCord?'Say what feels wrong':'Write')+'</h3>'
     +(opts.threadName?'<div class="std">writing into \u201c'+opts.threadName+'\u201d \u2014 the reader will propose the join; you have the last word</div>':'')
     +'<textarea class="pen" id="penSheet" placeholder="'+(isCord?'In plain words. It will be carried as a contest \u2014 with your name and standing.':'Write what happened, what you wonder, what you\u2019d bet on.')+'"'+(isCord?' data-cord="1"':'')+'></textarea>'
-    +'<div class="penrow"><span class="stamp">Todd \u00b7 today \u00b7 kept in the record</span>'
+    +'<div class="penrow"><span class="stamp">'+nameOf(VIEWER)+' \u00b7 today \u00b7 kept in the record</span>'
     +'<button class="enter" id="enterSheet">Enter</button></div>'
     +(isCord?'':'<button class="cordline" id="cordSheet">something is wrong with how we\u2019re working</button>'));
   var ta=document.getElementById('penSheet');
@@ -639,7 +751,7 @@ function submitEntry(v,isCord){
       mentions.push(id);v=v.replace(new RegExp('\\b'+agents[id].name+'\\b'),'{'+id+'}');
     }
   });
-  var ne=ev(VIEWER,'entry.written',{text:v,type:null,thread:null,mentions:mentions},null,0,'just now');
+  store.append(VIEWER,'entry.written',{text:v,type:null,thread:null,mentions:mentions},null).then(function(ne){
   frankId=ne.id;
   if(currentView()!=='journal')go('journal');else renderAll();
   setTimeout(function(){
@@ -650,6 +762,7 @@ function submitEntry(v,isCord){
     stage({type:gt,thread:gth,reason:reason},ne.addr,0);
     flashChip=ne.id;renderAll();
   },950);
+  }).catch(function(){});
 }
 document.getElementById('writeBtn').addEventListener('click',function(){openComposer()});
 document.getElementById('penFab').addEventListener('click',function(){openComposer()});
@@ -714,7 +827,7 @@ document.getElementById('stream').addEventListener('click',function(evn){
   if(w){var el=document.getElementById('why-'+w.dataset.why);if(el)el.classList.toggle('on');return}
   var ok=t.closest('[data-ok]');
   if(ok){var e0=events.find(function(e){return e.id===+ok.dataset.ok});var pr0=stagedFor(e0.addr);
-    ev(VIEWER,'inference.confirmed',{proposal:pr0?pr0.body:null},e0.addr,0);unstage(e0.addr);flashInk=e0.id;renderAll();return}
+    store.append(VIEWER,'inference.confirmed',{proposal:pr0?pr0.body:null},e0.addr).then(function(){unstage(e0.addr);flashInk=e0.id;renderAll()}).catch(function(){});return}
   var no=t.closest('[data-no]');
   if(no){
     var i=+no.dataset.no,box=document.getElementById('why-'+i);
@@ -735,8 +848,8 @@ document.getElementById('stream').addEventListener('click',function(evn){
     var pick=box2.dataset.pick||latestAssertion(e2).type;
     var say=(document.getElementById('fixsay-'+i2)||{}).value||'';
     var pr2=stagedFor(e2.addr);
-    ev(VIEWER,'inference.corrected',{now:pick,was:pr2?pr2.body.type:null,proposal:pr2?pr2.body:null,reason:say||'(no reason given)'},e2.addr,0);
-    unstage(e2.addr);corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;flashInk=i2;renderAll();return}
+    store.append(VIEWER,'inference.corrected',{now:pick,was:pr2?pr2.body.type:null,proposal:pr2?pr2.body:null,reason:say||'(no reason given)'},e2.addr)
+      .then(function(){unstage(e2.addr);flashInk=i2;renderAll()}).catch(function(){});return}
   var m=t.closest('.mn');if(m){openPerson(m.dataset.p);return}
   var tl=t.closest('.thlink');if(tl)openThread(tl.dataset.t);
 });
@@ -744,8 +857,8 @@ document.getElementById('stream').addEventListener('click',function(evn){
 /* people */
 function renderPeople(){
   document.getElementById('plist').innerHTML=foldPeople(VIEWER).map(function(r){
-    var how='You named '+(r.agent.id==='jo'?'her':'him')+' in '+r.to+' entr'+(r.to===1?'y':'ies')
-      +(r.from?'; '+(r.agent.id==='jo'?'she':'he')+' named or cited you in '+r.from+'.':'. The weaving runs one way so far.');
+    var how='You named them in '+r.to+' entr'+(r.to===1?'y':'ies')
+      +(r.from?'; they named or cited you in '+r.from+'.':'. The weaving runs one way so far.');
     return '<div class="row" data-person="'+r.agent.id+'"><div class="r1"><span class="dot'+(r.mutual?' f':'')+'"></span>'
       +'<span class="rn">'+r.agent.name+'</span></div><p class="sub">'+how+'</p></div>';
   }).join('');
@@ -757,7 +870,7 @@ function strands(id){
   var mine=events.filter(function(e){return e.agent===id&&e.kind==='entry.written'});
   var kinds={};mine.forEach(function(e){var a=latestAssertion(e);kinds[a.type]=(kinds[a.type]||0)+1});
   var used=terms.filter(function(t){return mine.some(function(e){return e.body.text.toLowerCase().indexOf(t.t.replace('the ',''))>-1})}).map(function(t){return t.t});
-  var corr=events.filter(function(e){return e.agent===id&&e.kind==='inference.corrected'}).length+(corrTally[id]||0);
+  var corr=corrCount(id);
   return [
     {n:'Language',c:'var(--l)',v:used.length?used:null,d:'The words they reach for in the record'},
     {n:'Artifacts',c:'var(--a)',v:[mine.length+' entries in the record'],d:'What their hands have touched'},
@@ -882,7 +995,7 @@ document.getElementById('glist').addEventListener('click',function(evn){
   if(!evn.target.closest('[data-g="next"]'))return;
   openPane('gathering',
     '<h3>Wednesday close \u00b7 week 36</h3><div class="std">Sep 2 \u00b7 the room</div>'
-    +'<p>The improvement of improving, given a date and a room. Carried to it by the record: Kevin\u2019s contest of the trial measure; the cadence question; and peer rereading \u2014 members reviewing one another\u2019s entries and the reader\u2019s inferences \u2014 offered here by explicit consent, never ambient in the app.</p>');
+    +'<p>The improvement of improving, given a date and a room. Carried to it by the record: Cass\u2019s contest of the trial measure; the cadence question; and peer rereading \u2014 members reviewing one another\u2019s entries and the reader\u2019s inferences \u2014 offered here by explicit consent, never ambient in the app.</p>');
 });
 
 /* words */
@@ -919,10 +1032,10 @@ function renderShare(){
 /* reread */
 function openReread(){
   var mine=foldEntries(false).filter(function(x){return x.e.agent===VIEWER}).slice(0,3),idx=0;
-  ev(VIEWER,'rereading.held',{count:mine.length},null,0);
+  store.append(VIEWER,'rereading.held',{count:mine.length},null).catch(function(){});
   function step(){
     if(idx>=mine.length){
-      var dist=Object.keys(corrTally).sort(function(a,b){return corrTally[b]-corrTally[a]}).map(function(id){return nameOf(id)+' ('+corrTally[id]+')'}).join(' \u00b7 ');
+      var dist=Object.keys(agents).filter(function(id){return corrCount(id)>0}).sort(function(a,b){return corrCount(b)-corrCount(a)}).map(function(id){return nameOf(id)+' ('+corrCount(id)+')'}).join(' \u00b7 ')||'nobody yet';
       openPane('rereading',
         '<h3>Rereading done.</h3><p>'+mine.length+' entries reread. What you confirmed and corrected is kept in the record with your name \u2014 it is how the reader learns to read the way this co-op thinks, and rereading your own words is how you notice what you actually meant. Both learners, one gesture.</p>'
         +'<p class="fine">The reader\u2019s judgment is trained on corrections from: '+dist+' \u2014 said plainly, so the members can see whose way of seeing it is learning.</p>');
@@ -932,20 +1045,19 @@ function openReread(){
     openPane('rereading',
       '<h3>Rereading</h3><div class="std">your recent entries \u00b7 '+(idx+1)+' of '+mine.length+' \u00b7 a few minutes, when you choose</div>'
       +'<div class="prog">'+mine.map(function(_,i){return '<span class="'+(i<idx?'done':'')+'"></span>'}).join('')+'</div>'
-      +'<div class="rbody">'+x.e.body.text.replace(/\{(\w+)\}/g,function(_,id){return nameOf(id)})+'</div>'
+      +'<div class="rbody">'+x.e.body.text.replace(/\{([\w-]+)\}/g,function(_,id){return nameOf(id)})+'</div>'
       +'<div class="inf"><span class="wk">what the reader made of it</span>a <b>'+a.type+'</b>'+(a.thread?' in <b>'+threadName(a.thread)+'</b>':', in no thread')+'.'+(a.reason?' because: '+a.reason:'')+'</div>'
       +'<p style="font-size:13px">Reading it again \u2014 what was this, really? What does it connect to?</p>'
       +'<textarea class="say" id="rrsay" placeholder="In your own words. Your reasons are the part that teaches \u2014 the reader, and you."></textarea>'
       +'<div class="actions"><button class="tbtn go" id="rrK">The reader had it right</button>'
       +'<button class="tbtn" id="rrF">Keep my reading instead</button></div>'
       +'<div class="fine">Skipping is fine and costs nothing. Corrections teach far more than agreements \u2014 and the reader is never allowed to make agreeing easier than being right.</div>');
-    document.getElementById('rrK').addEventListener('click',function(){var prr=stagedFor(x.e.addr);ev(VIEWER,'inference.confirmed',{via:'rereading',proposal:prr?prr.body:null},x.e.addr,0);unstage(x.e.addr);idx++;step()});
+    document.getElementById('rrK').addEventListener('click',function(){var prr=stagedFor(x.e.addr);store.append(VIEWER,'inference.confirmed',{via:'rereading',proposal:prr?prr.body:null},x.e.addr).then(function(){unstage(x.e.addr);idx++;step()}).catch(function(){})});
     document.getElementById('rrF').addEventListener('click',function(){
       var say=document.getElementById('rrsay').value;
       var prf=stagedFor(x.e.addr);
-      ev(VIEWER,'inference.corrected',{reason:say||'(no reason given)',via:'rereading',proposal:prf?prf.body:null},x.e.addr,0);
-      unstage(x.e.addr);
-      corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;idx++;step();
+      store.append(VIEWER,'inference.corrected',{reason:say||'(no reason given)',via:'rereading',proposal:prf?prf.body:null},x.e.addr)
+        .then(function(){unstage(x.e.addr);idx++;step()}).catch(function(){});
     });
   }
   step();
@@ -986,7 +1098,8 @@ document.getElementById('moreBtn').addEventListener('click',function(){
     +'<button class="rbtn" data-more-act="log">The record itself</button>'
     +'<button class="rbtn" data-more-act="guest">View as guest</button>'
     +'</div>'
-    +'<p style="margin:12px 10px 0;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Demonstration seed — every entry below is invented; the names are real members, the writing is not theirs. Public beta, unadopted and undeployed: everything lives in memory and is gone on reload. The reader is a word-pattern stand-in for the live one.</p>');
+    +'<p class="sess" id="sessMore" style="margin:12px 10px 0">'+(document.getElementById('sessLine')||{}).textContent+'</p>'
+    +'<p class="seedonly" style="margin:8px 10px 0;font-size:10.5px;line-height:1.6;color:var(--faint);font-style:italic">Illustrative seed \u2014 every name and entry below is invented; none of the people are members. Public beta, unadopted. The reader is a word-pattern stand-in for the live one.</p>');
 });
 
 /* guest */
@@ -1024,23 +1137,31 @@ paneBody.addEventListener('click',function(evn){
     var nameEl=document.getElementById('tname'),nm=(nameEl&&nameEl.value.trim())||'';
     if(!nm){if(nameEl)nameEl.focus();return}
     var fm=foldForming()[+nt.dataset.namethread];
-    var id='t'+(threads.length+1);
-    threads.push({id:id,name:nm,namedBy:VIEWER});
-    ev(VIEWER,'thread.named',{thread:id,name:nm,proposal:fm.ev.body},fm.members[0]||null,0);
-    fm.members.forEach(function(addr){
-      var src=findByAddr(addr);
-      ev(VIEWER,'thread.joined',{thread:id},addr,0);
-      if(src&&src.kind==='entry.written'){src.body.thread=id;ev(VIEWER,'inference.confirmed',{},addr,0)}
-    });
-    staged=staged.filter(function(p){return p.sid!==fm.ev.sid});
-    closePane();renderAll();return}
+    var id=(store.mode==='record'&&window.crypto&&crypto.randomUUID)?'t-'+crypto.randomUUID().slice(0,8):'t'+(threads.length+1);
+    /* Each member entry is joined by a compensating confirmation carrying the thread in
+       its proposal; the appended entry row is never edited (append-only holds). */
+    store.nameThread(id,nm).then(function(){
+      return store.append(VIEWER,'thread.named',{thread:id,name:nm,proposal:fm.ev.body},fm.members[0]||null);
+    }).then(function(){
+      return fm.members.reduce(function(p,addr){return p.then(function(){
+        var src=findByAddr(addr);
+        return store.append(VIEWER,'thread.joined',{thread:id},addr).then(function(){
+          if(src&&src.kind==='entry.written')return store.append(VIEWER,'inference.confirmed',{proposal:{type:latestAssertion(src).type,thread:id}},addr);
+        });
+      })},Promise.resolve());
+    }).then(function(){
+      staged=staged.filter(function(p){return p.sid!==fm.ev.sid});
+      closePane();renderAll();
+    }).catch(function(){});
+    return}
   var xt=t.closest('[data-notthread]');
   if(xt){
     var fm2=foldForming()[+xt.dataset.notthread];
-    ev(VIEWER,'inference.corrected',{reason:'not a thread',via:'forming refusal',proposal:fm2.ev.body},fm2.members[0]||null,0);
-    corrTally[VIEWER]=(corrTally[VIEWER]||0)+1;
-    staged=staged.filter(function(p){return p.sid!==fm2.ev.sid});
-    closePane();renderAll();return}
+    store.append(VIEWER,'inference.corrected',{reason:'not a thread',via:'forming refusal',proposal:fm2.ev.body},fm2.members[0]||null).then(function(){
+      staged=staged.filter(function(p){return p.sid!==fm2.ev.sid});
+      closePane();renderAll();
+    }).catch(function(){});
+    return}
 });
 
 /* keys */
@@ -1057,7 +1178,6 @@ document.addEventListener('keydown',function(evn){
 
 function renderAll(){renderStream();renderPeople();renderThreads();renderOpen();renderGather();renderWords();renderShare()}
 if(!location.hash)location.hash='#/journal';
-route();
 
 /* first-visit tutorial */
 var pages=[
@@ -1078,7 +1198,13 @@ function tutStep(){
   if(b)b.addEventListener('click',function(){pg--;tutStep()});
   if(d)d.addEventListener('click',closePane);
 }
-tutStep();
+function boot(){
+  store.select().then(function(){
+    if(store.mode!=='record')seedDemo();
+    renderSession();route();tutStep();
+  });
+}
+boot();
 })();
 </script>
 </body>

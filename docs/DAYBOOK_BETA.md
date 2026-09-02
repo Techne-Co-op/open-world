@@ -38,7 +38,7 @@ To which the Daybook adds, from the register: **the log is the journal, and ever
 
 ## 3 · The schema
 
-One growing table; everything else is identity, vocabulary, or computation. *(Unchanged since v0 except as D-01 and D-03 amend it: no `class` on `agents`, and `inference.proposed` is a staging shape rather than an event kind.)*
+One growing table; everything else is identity, vocabulary, or computation. *(Unchanged since v0 except as D-01 and D-03 amend it: no `class` on `agents`, and `inference.proposed` is a staging shape rather than an event kind.)* In the CIS these relations carry a `beta_` prefix (techne.coop `supabase/migrations/0040_daybook_beta.sql`) and are not record classes: nothing in them is cited by an instrument or adopted, and the whole surface drops in one statement.
 
 ### agents
 *Home: CIS. The Daybook adds nothing.*
@@ -184,7 +184,7 @@ Full agent governance: `READERS_INSTRUCTIONS.md`.
 
 The running artifact implements the schema literally: an in-memory `events` log with ~35 seeded rows, every view computed as a genuine fold. Working: entry capture with mention resolution, reader proposals with reasons, confirm and correct paths, forming-thread naming and refusal, the rereading room with live correction distribution, the raw-log inspector, guest mode, the cord, the share-as-project stop card, routes with back-gesture handling, drag-dismiss sheets, drafts, skeletons, and installability.
 
-**Honest seams.** The classifier is a word-pattern stand-in for the live model call. Persistence is in-memory; the real build syncs to the CIS, and a service worker (shell-only caching) is not present in the prototype — the `open-world` repository already ships one that caches the shell and never the record, and the build adopts that one rather than writing a second. Peer rereading is described but not built. §-addresses copy but are not yet individually routed. And the register's own unresolved question passes through unanswered: *what an append-only record owes a person who leaves* — the schema's only contribution is keeping it answerable in one place, with the decision before the members.
+**Honest seams.** The classifier is a word-pattern stand-in for the live model call. Persistence in the prototype is in-memory; the served build (`/daybook/`) reads and appends through one seam, in memory by default and against the CIS `beta_` relations when signed in at the shell and the relation answers (D-06). A service worker (shell-only caching) is not present in the prototype — the `open-world` repository already ships one that caches the shell and never the record, and the build adopts that one rather than writing a second. Peer rereading is described but not built. §-addresses copy but are not yet individually routed. And the register's own unresolved question passes through unanswered: *what an append-only record owes a person who leaves* — the schema's only contribution is keeping it answerable in one place, with the decision before the members.
 
 ---
 
